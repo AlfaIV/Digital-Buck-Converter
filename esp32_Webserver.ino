@@ -14,12 +14,12 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/api/websocket");
 
 typedef struct StabilizerState {
-  string mode = "PWM";  //default "none"
+  string mode = "none";  //default "none"
   double voltage = 0;
   //params for mode = "PWM"
-  double duty = 10;
-  double pwm_freq = 10;
-  string law_reg = "ПИД";
+  double duty = 0;
+  double pwm_freq = 0;
+  string law_reg = "П";
   //params for mode = "PFM"
   double pfm_freq = 0;
   double pulse_duration = 2;
