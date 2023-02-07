@@ -1,0 +1,137 @@
+#include "Arduino.h"
+#include "Gen_pulse.h"
+
+/*
+Gen_pulse::Gen_pulse(int _pin, int _channel, int _resolution)
+{
+  ledcAttachPin(_pin, _channel);
+  ledcSetup(_channel, Initial_Freq, _resolution);
+  //ledcWrite(0, calcDuty(80000)); 
+
+
+  //
+  ref_Duty = floor((ref_out/ADC_in_MAX) * pow(2, _resolution));//fix it
+};
+*/
+
+//------------------------------------------------------------
+//PWM
+
+void Gen_pulse::Set_PWM(int _pin, int _channel, int _resolution)
+{
+
+  //D = Uout/Uin [0,1] -> Uout/Uin * 2**resolution -> [0,2**resolution]
+
+  ledcAttachPin(_pin, _channel);
+  ledcSetup(_channel, Initial_Freq, _resolution);
+
+  this->ref_Duty = floor((ref_out/ADC_in_MAX) * pow(2, _resolution));//fix it
+
+  ledcWrite(_channel, this->ref_Duty);
+
+};
+
+
+void Gen_pulse::Change_PWM(double discrepancy, int _Duty, int _channel)
+{
+  //D = (Uout + dU) /Uin = Uout/Uin + dU/Uin = refD + D'
+  if (_Duty == NULL)
+  {
+    int _discrepancy = floor(discrepancy/ADC_in_MAX * pow(2, def_resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
+    int _Duty = ref_Duty + _discrepancy;
+  };
+
+  _Duty = constrain(_Duty, 0, pow(2, def_resolution));//defend
+  this->Duty = _Duty;
+
+  ledcWrite(_channel, this->ref_Duty);
+};
+
+//----------------------------------------------------
+//PFM
+
+int Gen_pulse::get_Duty(float _t_p, int _freq)
+{
+  //D = tp/T = tp*freq 
+  float _Duty = (_t_p*_freq*pow(2, def_resolution));
+  //Serial.print(_Duty);
+  _Duty = constrain(_Duty, 0, pow(2,def_resolution));
+  //Serial.print(_Duty);
+  return _Duty;
+};
+
+void Gen_pulse::Set_PFM(int _t_p, int _pin, int _channel, int _resolution)
+{
+  ledcAttachPin(_pin, _channel);
+  ledcSetup(_channel, Initial_Freq, _resolution);
+
+  double ref_freq = (ref_out)/(ADC_in_MAX * Initial_t_p);
+  int _freq = int(ref_freq/1e3)*1e3;
+  //Serial.print("freq:");
+  //Serial.print(_freq);
+  //Serial.print(",");
+  _freq = constrain(_freq,0,MAX_freq);
+  //delay(100);
+
+  //Serial.print("freq:");
+  //Serial.print(_freq);
+  //Serial.print(",");
+  ledcChangeFrequency(_channel, _freq, _resolution);
+  this->freq = _freq;
+  //delay(100);
+
+  int _Duty = get_Duty(Initial_t_p,_freq);
+  //Serial.print("_Duty:");
+  //Serial.print(_Duty);
+  //Serial.print(",");
+  ledcWrite(_channel, _Duty);
+  this->Duty = _Duty;
+  //Serial.print("duty:");
+  //Serial.print(_Duty);
+  //Serial.print(",");
+};
+
+void Gen_pulse::Change_PFM(double discrepancy, int _channel, int _resolution)
+{
+  //(dV + Vin)/Vout = tp/T = tp*(f + f') =>
+  //f' = (dV + Vin)/(Vout * tp) - f
+
+  int _freq = floor((ref_out + discrepancy)/(ADC_in_MAX * Initial_t_p));
+  _freq = constrain(_freq, 0 , MAX_freq);
+  ledcChangeFrequency(_channel, _freq, _resolution);
+  this->freq = _freq;
+
+  int _Duty = get_Duty(Initial_t_p,_freq);
+  ledcWrite(_channel, _Duty);
+  this->Duty = _Duty;
+};
+
+//-------------------------------------------------------------------------------------
+void Gen_pulse::Set_Hyst(double up_window, double down_window, int PIN)
+{
+  //up_window down_window - в процентах от 0 до 1 от номинального выходного напряжения;
+  //переводим в вольты, в реальные границы по напряжению
+
+  double _up_window = up_window*ref_out;
+  this->up_window = _up_window;
+
+  double _down_window = down_window*ref_out;
+  this->down_window = _down_window;
+
+  pinMode(PIN, OUTPUT);
+
+};
+void Gen_pulse::Change_Hyst(double discrepancy, int PIN)
+{
+  if (discrepancy >=  this->up_window)
+  {
+    digitalWrite(PIN, 0);
+    Serial.print("Change_Hyst:");
+    Serial.println("LOW");
+  }else if(discrepancy <=  this->down_window)
+  {
+    digitalWrite(PIN, 1);
+    Serial.print("Change_Hyst:");
+    Serial.println("HIGH");
+  };
+};
