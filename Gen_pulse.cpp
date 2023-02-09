@@ -38,13 +38,14 @@ void Gen_pulse::Change_PWM(double discrepancy, int _Duty, int _channel)
   if (_Duty == NULL)
   {
     int _discrepancy = floor(discrepancy/ADC_in_MAX * pow(2, def_resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
-    int _Duty = ref_Duty + _discrepancy;
+    _Duty = ref_Duty + _discrepancy;
   };
-
+  //Serial.print(_Duty);
   _Duty = constrain(_Duty, 0, pow(2, def_resolution));//defend
   this->Duty = _Duty;
 
-  ledcWrite(_channel, this->ref_Duty);
+  ledcWrite(_channel, this->Duty);
+  //Serial.print(this->Duty);
 };
 
 //----------------------------------------------------
@@ -125,13 +126,13 @@ void Gen_pulse::Change_Hyst(double discrepancy, int PIN)
 {
   if (discrepancy >=  this->up_window)
   {
-    digitalWrite(PIN, 0);
-    Serial.print("Change_Hyst:");
-    Serial.println("LOW");
-  }else if(discrepancy <=  this->down_window)
-  {
     digitalWrite(PIN, 1);
     Serial.print("Change_Hyst:");
     Serial.println("HIGH");
+  }else if(discrepancy <=  this->down_window)
+  {
+    digitalWrite(PIN, 0);
+    Serial.print("Change_Hyst:");
+    Serial.println("LOW");
   };
 };
