@@ -17,34 +17,47 @@ Gen_pulse::Gen_pulse(int _pin, int _channel, int _resolution)
 //------------------------------------------------------------
 //PWM
 
-void Gen_pulse::Set_PWM(int _pin, int _channel, int _resolution)
+void Gen_pulse::Set_PWM(double _ref_out, double _ref_out_max)
 {
 
   //D = Uout/Uin [0,1] -> Uout/Uin * 2**resolution -> [0,2**resolution]
+  //int _pin = this->pin;
+  //int _channel = this->channel;
+  
+  //int _resolution = def_resolution; //не меняеться, но надо один раз расчитат обьвлении
+  //так как частота не выше 150 кГц
+  int _freq = Initial_Freq; //переменная в классе отражает текущее значение
+  //и мжет отличаться от Initial_Freq
+  
+  //auto _ref_out = ref_out;
+  //auto _ref_out_max = ADC_in_MAX;
+  
+  ledcAttachPin(this->pin, this->channel);
+  ledcSetup(this->channel, _freq, this->resolution);
 
-  ledcAttachPin(_pin, _channel);
-  ledcSetup(_channel, Initial_Freq, _resolution);
+  this->ref_Duty = floor((_ref_out/_ref_out_max) * pow(2, this->resolution));//fix it
 
-  this->ref_Duty = floor((ref_out/ADC_in_MAX) * pow(2, _resolution));//fix it
-
-  ledcWrite(_channel, this->ref_Duty);
+  ledcWrite(this->channel, this->ref_Duty);
 
 };
 
 
-void Gen_pulse::Change_PWM(double discrepancy, int _Duty, int _channel)
+void Gen_pulse::Change_PWM(double discrepancy, int _Duty)
 {
+  //int _channel = def_channel;
+  double _deviation = deviation;
+  
   //D = (Uout + dU) /Uin = Uout/Uin + dU/Uin = refD + D'
-  if (_Duty == NULL)
+  if (_Duty == NULL && abs(discrepancy) > _deviation)
   {
-    int _discrepancy = floor(discrepancy/ADC_in_MAX * pow(2, def_resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
-    _Duty = ref_Duty + _discrepancy;
+    int _discrepancy = floor(discrepancy/ADC_in_MAX * pow(2, this->resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
+    _Duty = this->ref_Duty + _discrepancy;
   };
   //Serial.print(_Duty);
-  _Duty = constrain(_Duty, 0, pow(2, def_resolution));//defend
+  _Duty = constrain(_Duty, 0, pow(2, this->resolution));//defend
   this->Duty = _Duty;
 
-  ledcWrite(_channel, this->Duty);
+  ledcWrite(this->channel, this->Duty);
   //Serial.print(this->Duty);
 };
 
@@ -61,10 +74,12 @@ int Gen_pulse::get_Duty(float _t_p, int _freq)
   return _Duty;
 };
 
-void Gen_pulse::Set_PFM(int _t_p, int _pin, int _channel, int _resolution)
+void Gen_pulse::Set_PFM(int _t_p)
 {
-  ledcAttachPin(_pin, _channel);
-  ledcSetup(_channel, Initial_Freq, _resolution);
+  int _init_freq = Initial_Freq;//???
+  
+  ledcAttachPin(this->pin, this->channel);
+  ledcSetup(this->channel, _init_freq, this->resolution);
 
   double ref_freq = (ref_out)/(ADC_in_MAX * Initial_t_p);
   int _freq = int(ref_freq/1e3)*1e3;
@@ -77,7 +92,7 @@ void Gen_pulse::Set_PFM(int _t_p, int _pin, int _channel, int _resolution)
   //Serial.print("freq:");
   //Serial.print(_freq);
   //Serial.print(",");
-  ledcChangeFrequency(_channel, _freq, _resolution);
+  ledcChangeFrequency(this->channel, _freq, this->resolution);
   this->freq = _freq;
   //delay(100);
 
@@ -85,7 +100,7 @@ void Gen_pulse::Set_PFM(int _t_p, int _pin, int _channel, int _resolution)
   //Serial.print("_Duty:");
   //Serial.print(_Duty);
   //Serial.print(",");
-  ledcWrite(_channel, _Duty);
+  ledcWrite(this->channel, _Duty);
   this->Duty = _Duty;
   //Serial.print("duty:");
   //Serial.print(_Duty);
@@ -99,11 +114,11 @@ void Gen_pulse::Change_PFM(double discrepancy, int _channel, int _resolution)
 
   int _freq = floor((ref_out + discrepancy)/(ADC_in_MAX * Initial_t_p));
   _freq = constrain(_freq, 0 , MAX_freq);
-  ledcChangeFrequency(_channel, _freq, _resolution);
+  ledcChangeFrequency(this->channel, _freq, this->resolution);
   this->freq = _freq;
 
   int _Duty = get_Duty(Initial_t_p,_freq);
-  ledcWrite(_channel, _Duty);
+  ledcWrite(this->channel, _Duty);
   this->Duty = _Duty;
 };
 

@@ -3,16 +3,24 @@
 
 #include "Arduino.h"
 
+//change
+#define out_value 1.5
+
 class Control_Func_API
 {
   public:
 
     typedef struct Control_data{
+      //стуктура с данными для настройки регуляторов
       //expected that system do not have inital value
       double current_value = 0;//this value from ADC
-      double reference_value = 1.5;//output voltage
+      //значение с ADC
+      double reference_value = out_value;//output voltage
+      //требуемое выходное напряжение
+      
       double current_value_flt = 0;
-
+      
+      //параметры регуляторов
       int K_p = 1;
       int K_i = 1;
       int K_d = 1;
