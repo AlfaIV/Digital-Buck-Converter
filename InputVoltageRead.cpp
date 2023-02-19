@@ -2,16 +2,6 @@
 
 //InputVoltageRead.cpp
 
-#define ADC_pin 15//CHANGE
-#define ADC_bit_with 12
-#define ADC_in_MAX 3.3
-
-
-//change!!!!!
-#define R_adc 96.0
-#define R 455.0
-
-
 //------------------------------------
 
 InputVoltageRead::InputVoltageRead(){
@@ -36,25 +26,23 @@ int InputVoltageRead::Read_data(){
 
 //------------------------------------
 
-double InputVoltageRead::Get_real_volt(int& Data){
+double InputVoltageRead::Get_real_volt(int Data){
   double K = ADC_in_MAX/pow(2,ADC_bit_with);
   //коэффициент переводит из принятых данных в вольты на ADC
   return K*(Data);
 }; 
 
 double InputVoltageRead::Get_real_volt(){
-  double K = ADC_in_MAX/pow(2,ADC_bit_with);
-  //коэффициент переводит из принятых данных в вольты на ADC
-  //ReadData = InputVoltageRead::Read_data();
-  ReadData = this->Read_data();
-  ReadDataInVolt = K*(ReadData);
-  return ReadDataInVolt;
+  //return this->Get_real_volt(this->Read_data());
+  return this->Get_real_volt(this->expRunningAverage());
+  //return this->Get_real_volt(this->findMedianN_optim());
+  //сдесь нужно выбрать и настроить норм фильтр!!!!
 };
 
 //------------------------------------
 // бегущее среднее
-double InputVoltageRead::expRunningAverage(double newVal) {
-  double k = 0.1;  
+double InputVoltageRead::expRunningAverage(double newVal, double k) {
+  //double k = 0.1;  
   // коэффициент фильтрации, 0.0-1.0
   //???double systematic_error = 0.05;
 
@@ -64,6 +52,7 @@ double InputVoltageRead::expRunningAverage(double newVal) {
 };
 
 double InputVoltageRead::expRunningAverage() {
+  /*
   double k = 0.1;  
   // коэффициент фильтрации, 0.0-1.0
   //???double systematic_error = 0.05;
@@ -71,6 +60,8 @@ double InputVoltageRead::expRunningAverage() {
   filVal += (this->ReadDataInVolt - filVal) * k;
   return filVal;
   //return 0;
+  */
+  return this->expRunningAverage(this->Read_data());
 };
 
 
@@ -78,7 +69,6 @@ double InputVoltageRead::expRunningAverage() {
 // предложен Виталием Емельяновым, доработан AlexGyver
 // возвращает медиану по последним NUM_READ вызовам
 // НАВЕРНОЕ ЛУЧШИЙ ВАРИАНТ!
-#define NUM_READ 5 // порядок медианы
 // медиана на N значений со своим буфером, ускоренный вариант
 float InputVoltageRead::findMedianN_optim(float newVal)
 {
@@ -129,8 +119,8 @@ double InputVoltageRead::Volt_on_Devider(double Data)
 
 double InputVoltageRead::Volt_on_Devider()
 {
-  double Data = this->expRunningAverage();
+  ///double Data = this->expRunningAverage();
   //Serial.print(Data);
-  return this->Volt_on_Devider(Data);
+  return this->Volt_on_Devider(this->Get_real_volt());
   //return Data;
 }

@@ -5,7 +5,7 @@
 #define Gen_pulse_h
 
 #define def_channel 0
-#define def_pin 13//CHANGE
+#define def_pin 32//CHANGE
 #define def_resolution 9 //bit
 
 #define Initial_Freq 100e3

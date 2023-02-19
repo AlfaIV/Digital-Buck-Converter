@@ -36,8 +36,9 @@ void Gen_pulse::Set_PWM(double _ref_out, double _ref_out_max)
   ledcSetup(this->channel, _freq, this->resolution);
 
   this->ref_Duty = floor((_ref_out/_ref_out_max) * pow(2, this->resolution));//fix it
+  this->Duty = this->ref_Duty;
 
-  ledcWrite(this->channel, this->ref_Duty);
+  ledcWrite(this->channel, this->Duty);
 
 };
 

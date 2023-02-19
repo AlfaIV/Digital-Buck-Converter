@@ -4,7 +4,7 @@
 #include "Arduino.h"
 
 //change
-#define out_value 1.5
+#define out_value 5
 
 class Control_Func_API
 {
@@ -21,16 +21,17 @@ class Control_Func_API
       double current_value_flt = 0;
       
       //параметры регуляторов
-      int K_p = 1;
-      int K_i = 1;
-      int K_d = 1;
+      double K_p = 1;
+      double K_i = 0.1;
+      double K_d = 1;
 
-      int dt = 1;//?? how take this value
+      int dt = 1;
+      //?? how take this value
       double integral = 0;
       double prev_err = reference_value - current_value;//
       
       unsigned int min_output = 0;
-      unsigned int max_output = 15;
+      unsigned int max_output = 10;
 
     } Control_data;
     
@@ -44,9 +45,9 @@ class Control_Func_API
     double P_regulation(double current_value);
   
     
-    double PI_regulation(Control_data * Current_control_data);
-    double PI_regulation();
-    double PI_regulation(double current_value);
+    double PD_regulation(Control_data * Current_control_data);
+    double PD_regulation();
+    double PD_regulation(double current_value);
     
     double PID_regulation(Control_data * Current_control_data);
     double PID_regulation();
