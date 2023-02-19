@@ -134,6 +134,21 @@ void setup() {
     request->send(SPIFFS, "/main.d53cb32032a7b77b8bfd.js", "text/javascript");
   });
 
+  //PWM
+  server.on("/PWM", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/index.html", String(), false);
+  });
+
+  //PFM
+  server.on("/PFM", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/index.html", String(), false);
+  });
+
+  //hysteresis
+  server.on("/hysteresis", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/index.html", String(), false);
+  });
+
   // Обработчики
   server.on(
     "/api/switch/mode", HTTP_POST, [](AsyncWebServerRequest *request) {
