@@ -37,7 +37,7 @@ class Gen_pulse
     //Gen_pulse(int _pin = def_pin, int _channel = def_channel, int _resolution = def_resolution);
     
     void Set_PWM(double _ref_out = ref_out, double _ref_out_max = ADC_in_MAX);
-    void Change_PWM(double discrepancy, int _Duty = NULL);
+    void Change_PWM(double discrepancy, double out_MAX = ADC_in_MAX ,int _Duty = NULL);
 
     int get_Duty(float _t_p, int _freq);
     void Set_PFM(int _t_p = Initial_t_p);

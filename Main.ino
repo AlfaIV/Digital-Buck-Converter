@@ -18,7 +18,7 @@ void TestAnalogRead()
   //dont foget add to setup
   //Gener.Set_PWM();
   //заглушка для поддержания ШИМа на выходе
-  Gener.Change_PWM(0.01,150);
+  Gener.Change_PWM(0.01,17,150);
   delay(50);
 
 
@@ -54,7 +54,7 @@ void TestControlFunc()
   //dont foget add to setup
   //Gener.Set_PWM();
   //заглушка для поддержания ШИМа на выходе
-  Gener.Change_PWM(0.01,150);
+  Gener.Change_PWM(0.01,17,150);
   delay(1000);
 
   double Read_Out_Volt = ADC.Volt_on_Devider();
@@ -83,21 +83,53 @@ void TestControlFunc()
 
 };
 
-bool TetsPWM()
+bool TestPWM()
 {
   int out_stb = 5;
   int out_max = 17;
   int _resolution = 9;//bit
-  int st_Duty = (out_stb/out_max)*pow(2,_resolution);
-  double discrepancy[4] = {1,-1,2,-2};
+  
+  //int st_Duty = (out_stb/out_max)*pow(2,_resolution);
+  auto Count_Duty = [& out_stb,& out_max,& _resolution](double discrepancy)->int
+  {
+    int Duty = ((out_stb + discrepancy)/out_max)*pow(2,_resolution);
+    //Serial.println("Count_Duty");
+    //Serial.print("For discrepancy: ");
+    //Serial.println(discrepancy);
+    //Serial.print(" counted Duty: ");
+    //Serial.println(Duty);  
+    return Duty;
+  };
 
-  Gener.Set_PWM(out_stb,out_max);
-  Gener.Change_PWM(discrepancy[0]);
+  double discrepancy[5] = {0,1,-1,2,-2};
+
+  //Gener.Set_PWM();
+  //Serial.print("Start Test:");
+  //Serial.println(Count_Duty(0) == Gener.Duty);
+  //delay(1e3);
+  //Gener.Change_PWM(discrepancy[0]);
+  for(int i = 0; i < 5; i++)
+  {
+    //Serial.print("PWM test");
+    //Serial.print(i);
+    //Serial.print(": ");    
+    Gener.Change_PWM(discrepancy[i],out_max);
+    Serial.println(Count_Duty(discrepancy[i]) == Gener.Duty);
+
+    Serial.print("Gener.Duty:");
+    Serial.println(Gener.Duty);
+    delay(10);
+  };
+
+  return 1;
 };
+
+
 
 void setup() {
   Serial.begin(9600);
   Gener.Set_PWM();
+  TestPWM();
   //Gener.Set_Hyst(0.05, -0.05);
   /*
   randomSeed(analogRead(35));
@@ -111,7 +143,6 @@ void loop() {
 
   //TestAnalogRead();
   //TestControlFunc();
-
 
 
   /*
