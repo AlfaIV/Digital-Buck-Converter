@@ -82,22 +82,24 @@ void TestControlFunc()
   
 
 };
+int out_stb = 5;
+int out_max = 17;
+int _resolution = 9;//bit
+
 
 bool TestPWM()
 {
-  int out_stb = 5;
-  int out_max = 17;
-  int _resolution = 9;//bit
+
   
   //int st_Duty = (out_stb/out_max)*pow(2,_resolution);
   auto Count_Duty = [& out_stb,& out_max,& _resolution](double discrepancy)->int
   {
-    int Duty = ((out_stb + discrepancy)/out_max)*pow(2,_resolution);
+    int Duty = floor(((out_stb + discrepancy)/out_max)*pow(2,_resolution));
     //Serial.println("Count_Duty");
     //Serial.print("For discrepancy: ");
     //Serial.println(discrepancy);
-    //Serial.print(" counted Duty: ");
-    //Serial.println(Duty);  
+    Serial.print(" counted Duty: ");
+    Serial.println(Duty);  
     return Duty;
   };
 
@@ -110,25 +112,47 @@ bool TestPWM()
   //Gener.Change_PWM(discrepancy[0]);
   for(int i = 0; i < 5; i++)
   {
-    //Serial.print("PWM test");
-    //Serial.print(i);
-    //Serial.print(": ");    
+    Serial.println("========================");
+    int CountedDuty = Count_Duty(discrepancy[i]);
     Gener.Change_PWM(discrepancy[i],out_max);
-    Serial.println(Count_Duty(discrepancy[i]) == Gener.Duty);
-
+    Serial.print("PWM test");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println( CountedDuty == Gener.Duty);
     Serial.print("Gener.Duty:");
     Serial.println(Gener.Duty);
+    //Serial.println("========================");
     delay(10);
   };
 
   return 1;
 };
 
+void SomeControlTest()
+{
+  //Gener.Change_PWM(CtrlFunc.P_regulation(ADC.Volt_on_Devider()),out_max);
+
+  /*
+  Gener.Change_PWM(CtrlFunc.PD_regulation(ADC.Volt_on_Devider()),out_max);
+  Serial.print("integral:");
+  Serial.println(CtrlFunc.PreDefined_control_data.integral);
+  delay(100);
+  */
+
+  Gener.Change_PWM(CtrlFunc.PID_regulation(ADC.Volt_on_Devider()),out_max);
+  //Serial.print("integral:");
+  //Serial.println(CtrlFunc.PreDefined_control_data.integral);
+  //Serial.print("integral:");
+  //Serial.println(CtrlFunc.PreDefined_control_data.integral);
+  delay(100);
+
+};
+
 
 
 void setup() {
   Serial.begin(9600);
-  Gener.Set_PWM();
+  Gener.Set_PWM(out_stb,out_max);
   TestPWM();
   //Gener.Set_Hyst(0.05, -0.05);
   /*
@@ -143,7 +167,7 @@ void loop() {
 
   //TestAnalogRead();
   //TestControlFunc();
-
+  SomeControlTest();
 
   /*
   //Проверка ЧИМ управления

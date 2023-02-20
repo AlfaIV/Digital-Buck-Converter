@@ -23,15 +23,16 @@ class Control_Func_API
       //параметры регуляторов
       double K_p = 1;
       double K_i = 0.1;
-      double K_d = 1;
+      double K_d = 0.01;
 
-      int dt = 1;
+      double dt = 0.1;
       //?? how take this value
       double integral = 0;
       double prev_err = reference_value - current_value;//
       
+      //can change this value for protect
       unsigned int min_output = 0;
-      unsigned int max_output = 10;
+      unsigned int max_output = 12;
 
     } Control_data;
     

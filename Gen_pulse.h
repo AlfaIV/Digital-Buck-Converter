@@ -9,8 +9,8 @@
 #define def_resolution 9 //bit
 
 #define Initial_Freq 100e3
-#define ADC_in_MAX 3.3
-#define ref_out 1.5
+#define ADC_in_MAX 17
+#define ref_out 5
 #define deviation 0.01
 //#define ref_Duty 5/15
 

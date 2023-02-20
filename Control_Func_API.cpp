@@ -32,7 +32,9 @@ double Control_Func_API::P_regulation(double current_value)
 double Control_Func_API::PD_regulation(Control_data* Current_control_data)
 {
   double err = Current_control_data->reference_value - Current_control_data->current_value;
-  Current_control_data->integral = Current_control_data->integral + err * Current_control_data->dt;
+  Current_control_data->integral = constrain(Current_control_data->integral + err * Current_control_data->dt,
+  Current_control_data->min_output,
+  Current_control_data->max_output);
   return constrain(Current_control_data->K_d*err + Current_control_data->K_i*Current_control_data->integral,
   Current_control_data->min_output,
   Current_control_data->max_output);
@@ -55,7 +57,9 @@ double Control_Func_API::PD_regulation(double current_value)
 double Control_Func_API::PID_regulation(Control_data* Current_control_data)
 {
   double err = Current_control_data->reference_value - Current_control_data->current_value;
-  Current_control_data->integral = (Current_control_data->integral + err * Current_control_data->dt);
+  Current_control_data->integral = constrain(Current_control_data->integral + err * Current_control_data->dt,
+  Current_control_data->min_output,
+  Current_control_data->max_output);
   double differential = (err - Current_control_data->prev_err) / Current_control_data->dt;
   Current_control_data->prev_err = err;
   return constrain(Current_control_data->K_d*err + Current_control_data->K_i*Current_control_data->integral + Current_control_data->K_d*differential,

@@ -51,10 +51,13 @@ void Gen_pulse::Change_PWM(double discrepancy, double out_MAX, int _Duty)
   //D = (Uout + dU) /Uin = Uout/Uin + dU/Uin = refD + D'
   if (_Duty == NULL && abs(discrepancy) > _deviation)
   {
-    int _discrepancy = floor(discrepancy/out_MAX * pow(2, this->resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
+    //int _discrepancy = floor(discrepancy/out_MAX * pow(2, this->resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
+    double _discrepancy = (discrepancy/out_MAX * pow(2, this->resolution));
     _Duty = this->ref_Duty + _discrepancy;
+  }else if (_Duty == NULL && abs(discrepancy) < _deviation) {
+    _Duty = this->Duty;
   };
-  Serial.print(_Duty);
+  //Serial.println(_Duty);
   _Duty = constrain(_Duty, 0, pow(2, this->resolution));//defend
   this->Duty = _Duty;
 
