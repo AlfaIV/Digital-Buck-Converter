@@ -175,12 +175,12 @@ void setup() {
     request->send(SPIFFS, "/index.html", String(), false);
   });
 
-  server.on("/main.990844fbb5976fcc3d57.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.990844fbb5976fcc3d57.css", "text/css");
+  server.on("/main.4c1393cbee59ec7826dd.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.d53cb32032a7b77b8bfd.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.d53cb32032a7b77b8bfd.js", "text/javascript");
+  server.on("/main.4f7e66cb469a02a2db7e.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.4f7e66cb469a02a2db7e.js", "text/javascript");
   });
 
   //PWM
