@@ -25,7 +25,7 @@ class Control_Func_API
       double K_i = 0.1;
       double K_d = 0.01;
 
-      double dt = 0.1;
+      double dt = 10E-3;
       //?? how take this value
       double integral = 0;
       double prev_err = reference_value - current_value;//

@@ -5,6 +5,15 @@
 #include <ArduinoJson.h>
 #include <string>
 
+#include "Control_Func_API.h"
+#include "InputVoltageRead.h"
+#include "Gen_pulse.h"
+
+InputVoltageRead ADC;
+Control_Func_API CtrlFunc;
+Gen_pulse Gener;
+
+
 using std::string;
 
 const char *ssid = "ZyXEL NBG-418N v2";
@@ -25,6 +34,8 @@ typedef struct StabilizerState {
   double pulse_duration = 2;
   //params for mode = "hysteresis"
   double hyster_window = 0.1;
+  //
+  bool is_work = false;
 } StabilizerState;
 
 StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
@@ -101,7 +112,45 @@ void initWebSocket() {
   ws.onEvent(onEvent);
   server.addHandler(&ws);
 }
+//-------------------------------------------------------------------
+void start(StabilizerState& state){
+  if (state.is_work) {
+    if (state.mode == "PWM") {
+      double ref_in = 15;//volt
+      Gener.Set_PWM(state.voltage,ref_in);
+    };
+  };
+}
+void stop(StabilizerState& state){
+  if (state.is_work == false) {
+    int _channel = 0;
+    ledcWrite(_channel, 0);
+  };
+}
 
+//крутиться в лупе, иначе стабилизатор не будет работать
+void StabilizerTread(StabilizerState& state){
+  if (state.is_work) {
+    double out_volt = ADC.Volt_on_Devider();
+    if (state.mode == "PWM")
+    {
+      if (state.law_reg == "П")
+      {
+        Gener.Change_PWM(CtrlFunc.P_regulation(out_volt));
+      }else if (state.law_reg == "ПД")
+      {
+        Gener.Change_PWM(CtrlFunc.PD_regulation(out_volt));
+        delay(10);
+      }else if (state.law_reg == "ПИД")
+      {
+        Gener.Change_PWM(CtrlFunc.PID_regulation(out_volt));
+        delay(10);
+      };
+      //обнавляем Duty
+      state.duty = Gener.Duty;
+    };
+  };
+}
 //--------------------------------------------------------------------
 
 void setup() {
@@ -194,6 +243,7 @@ void setup() {
         если false то дальше request->send(404, "text/plain", "Invalid input value");
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
+      stop(current_state);
       request->send(200, "text/plain", "");
 
       //request->send(404, "text/plain", "");
@@ -210,6 +260,9 @@ void setup() {
         /*TODO setOutVoltage((const char *)jsonDocument["voltage"]) 
         сама функция void setOutVoltage(string voltage) {...}
         */
+        current_state.voltage = jsonDocument["voltage"];
+        start(current_state);
+
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -246,6 +299,8 @@ void setup() {
         сама функция void setLawReg(string law_reg) {...}
         может принять law_reg даже если сейчас не PWM мод
         */
+        //просто переписываем данные в структуре, регулятор в потоке сам подхватит измения
+        current_state.law_reg = (const char *)jsonDocument["law_reg"];
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -297,6 +352,7 @@ void loop() {
     смотрит на текущий mode в current_state, и в зависимости от него обновляет нужные поля
     !!!!!!!!напряжение voltage не реальное, а то что мы сами задаём!!!!!!!!!!!!!!
   */
+  StabilizerTread(current_state);
   notifyClients(current_state);
   // ws.cleanupClients();
 }

@@ -45,6 +45,8 @@ class Gen_pulse
 
     void Set_Hyst(double up_window, double down_window, int PIN = def_pin);
     void Change_Hyst(double discrepancy, int PIN = def_pin);
+
+    
 };
 
 #endif
