@@ -16,8 +16,8 @@ Gen_pulse Gener;
 
 using std::string;
 
-const char *ssid = "ZyXEL NBG-418N v2";
-const char *password = "TEKKP46444";
+const char *ssid = "RedmI";
+const char *password = "00123987";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/api/websocket");
@@ -206,10 +206,10 @@ void setup() {
     NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
       DeserializationError root = deserializeJson(jsonDocument, (const char *)data);
       if (root.c_str() == "Ok") {
-        Serial.println((const char *)jsonDocument["mode"]);
-        /*TODO setMode((const char *)jsonDocument["mode"]) //возможные значения "PWM","PFM","hysteresis"
+        /*???? setMode((const char *)jsonDocument["mode"]) //возможные значения "PWM","PFM","hysteresis"
         сама функция void setMode(string mode) {...}
         */
+        current_state.mode = (const char *)jsonDocument["mode"];
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -227,6 +227,8 @@ void setup() {
         если false то дальше request->send(404, "text/plain", "Invalid input value");
         Запускает стабилизатор с теми параметрами что в current_state
         */
+      current_state.is_work = true;
+      start(current_state);
       request->send(200, "text/plain", "");
 
       //request->send(404, "text/plain", "");
@@ -243,6 +245,7 @@ void setup() {
         если false то дальше request->send(404, "text/plain", "Invalid input value");
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
+      current_state.is_work = false;
       stop(current_state);
       request->send(200, "text/plain", "");
 
@@ -256,13 +259,11 @@ void setup() {
     NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
       DeserializationError root = deserializeJson(jsonDocument, (const char *)data);
       if (root.c_str() == "Ok") {
-        Serial.println((const char *)jsonDocument["voltage"]);
         /*TODO setOutVoltage((const char *)jsonDocument["voltage"]) 
         сама функция void setOutVoltage(string voltage) {...}
         */
-        current_state.voltage = jsonDocument["voltage"];
-        start(current_state);
-
+        current_state.voltage = std::stod((const char *)jsonDocument["voltage"]);
+        //не надо его включать start(current_state);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -276,11 +277,11 @@ void setup() {
     NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
       DeserializationError root = deserializeJson(jsonDocument, (const char *)data);
       if (root.c_str() == "Ok") {
-        Serial.println((const char *)jsonDocument["pwm_freq"]);
         /*TODO setPwmFrequency((const char *)jsonDocument["pwm_freq"]) 
         сама функция void setPwmFrequency(string pwm_freq) {...}
         может принять pwm_freq даже если сейчас не PWM мод
         */
+        current_state.pwm_freq = std::stod((const char *)jsonDocument["pwm_freq"]);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -294,7 +295,6 @@ void setup() {
     NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
       DeserializationError root = deserializeJson(jsonDocument, (const char *)data);
       if (root.c_str() == "Ok") {
-        Serial.println((const char *)jsonDocument["law_reg"]);
         /*TODO setLawReg((const char *)jsonDocument["law_reg"]) 
         сама функция void setLawReg(string law_reg) {...}
         может принять law_reg даже если сейчас не PWM мод
@@ -314,11 +314,11 @@ void setup() {
     NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
       DeserializationError root = deserializeJson(jsonDocument, (const char *)data);
       if (root.c_str() == "Ok") {
-        Serial.println((const char *)jsonDocument["pulse_duration"]);
         /*TODO setPulseDuration((const char *)jsonDocument["pulse_duration"]) 
         сама функция void setPulseDuration(string pulse_duration) {...}
         может принять pulse_duration даже если сейчас не PFM мод
         */
+        current_state.pulse_duration = std::stod((const char *)jsonDocument["pulse_duration"]);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -332,11 +332,11 @@ void setup() {
     NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
       DeserializationError root = deserializeJson(jsonDocument, (const char *)data);
       if (root.c_str() == "Ok") {
-        Serial.println((const char *)jsonDocument["hyster_window"]);
         /*TODO setHysterWindow((const char *)jsonDocument["hyster_window"]) 
         сама функция void setHysterWindow(string hyster_window) {...}
         может принять hyster_window даже если сейчас не hysteresis мод
         */
+        current_state.hyster_window = std::stod((const char *)jsonDocument["hyster_window"]);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
