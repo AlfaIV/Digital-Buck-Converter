@@ -3,8 +3,7 @@
 
 #include "Arduino.h"
 
-//change
-#define out_value 5
+
 
 class Control_Func_API
 {
@@ -15,24 +14,27 @@ class Control_Func_API
       //expected that system do not have inital value
       double current_value = 0;//this value from ADC
       //значение с ADC
-      double reference_value = out_value;//output voltage
+      double reference_value = 5;//output voltage
       //требуемое выходное напряжение
+      //!! ---- нужно калибровать
       
-      double current_value_flt = 0;
+      //double current_value_flt = 0;
       
       //параметры регуляторов
-      double K_p = 1;
+      double K_p = 1.5;
       double K_i = 0.1;
       double K_d = 0.01;
+      double dt = 0.5;
+      //!! ---- нужно калибровать
 
-      double dt = 0.1;
       //?? how take this value
       double integral = 0;
       double prev_err = reference_value - current_value;//
       
       //can change this value for protect
-      unsigned int min_output = 0;
-      unsigned int max_output = 12;
+      double min_output = -13;
+      double max_output = 13;
+      //!! ---- нужно калибровать 
 
     } Control_data;
     
@@ -46,9 +48,9 @@ class Control_Func_API
     double P_regulation(double current_value);
   
     
-    double PD_regulation(Control_data * Current_control_data);
-    double PD_regulation();
-    double PD_regulation(double current_value);
+    double PI_regulation(Control_data * Current_control_data);
+    double PI_regulation();
+    double PI_regulation(double current_value);
     
     double PID_regulation(Control_data * Current_control_data);
     double PID_regulation();
