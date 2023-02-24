@@ -48,6 +48,8 @@ class Gen_pulse
 
     void Set_Hyst(double up_window, double down_window, double _ref_out = refer_out);
     void Change_Hyst(double discrepancy);
+
+    void COT_hyst(double window);
 };
 
 #endif

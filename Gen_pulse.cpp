@@ -145,7 +145,7 @@ void Gen_pulse::Change_PFM(double discrepancy)
 
 
 //-------------------------------------------------------------------------------------
-
+/*
 void Gen_pulse::Set_Hyst(double up_window, double down_window, double _ref_out)
 {
   //up_window down_window - в процентах от 0 до 1 от номинального выходного напряжения;
@@ -177,3 +177,58 @@ void Gen_pulse::Change_Hyst(double discrepancy)
     Serial.println("LOW");
   };
 };
+
+
+void COT_hyst(double window)
+{
+  //D = Uin/Uout = tp*f
+  // f = const = func(Uout) = Uin/(Uout * tp)
+  //=> tp(Uout) = Uin/(Uout * f) 
+}
+*/
+
+
+void Gen_pulse::Set_Hyst(double up_window, double down_window, double _ref_out)
+{
+  //up_window down_window - в процентах от 0 до 1 от номинального выходного напряжения;
+  //переводим в вольты, в реальные границы по напряжению
+ 
+
+  double _up_window = up_window*_ref_out;
+  this->up_window = _up_window;
+
+  double _down_window = down_window*_ref_out;
+  this->down_window = _down_window;
+
+  double _deviation = deviation;
+
+
+  this->freq = 8e6;
+  this->resolution = floor(log2(80e6/this->freq));
+  this->ref_out = _ref_out;
+
+  ledcAttachPin(this->pin, this->channel);
+  ledcSetup(this->channel, this->freq, this->resolution);
+  this->Duty = 0;
+  ledcWrite(this->channel, this->Duty);
+
+};
+
+
+void Gen_pulse::Change_Hyst(double discrepancy)
+{
+  if (discrepancy >=  this->up_window)
+  {
+    this->Duty= pow(2,this->resolution);
+    //Serial.print("Change_Hyst:");
+    //Serial.println("HIGH");
+  }else if(discrepancy <=  this->down_window)
+  {
+    this->Duty = 0;
+    //Serial.print("Change_Hyst:");
+    //Serial.println("LOW");
+  };
+  ledcWrite(this->channel, this->Duty);
+
+};
+

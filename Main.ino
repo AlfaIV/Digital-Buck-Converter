@@ -17,7 +17,7 @@ Gen_pulse Gener;
 using std::string;
 
 typedef struct StabilizerState {
-  string mode = "PFM";  //default "none"
+  string mode = "hysteresis";  //default "none"
   double voltage = 5;
   //params for mode = "PWM"
   double duty = 0;
@@ -110,7 +110,12 @@ void StabilizerTread(StabilizerState& state) {
     {
       Serial.println("hysteresis");
       Serial.println("P reg");
-      Gener.Change_Hyst(CtrlFunc.P_regulation(out_volt));
+
+      discrepancy = CtrlFunc.P_regulation(out_volt);
+      Serial.print("discrepancy: ");
+      Serial.println(discrepancy);
+
+      Gener.Change_Hyst(discrepancy);
     };
   };
 }
@@ -282,6 +287,40 @@ bool TetsPFM()
   return 1;
 };
 
+bool TestHist()
+{
+  //in develop
+  //not use
+  int len = 4;
+  double TestIn[len] = {current_state.voltage + current_state.voltage*(current_state.hyster_window - 0.01),
+                        current_state.voltage + current_state.voltage*(current_state.hyster_window + 0.01),
+                        current_state.voltage - current_state.voltage*(current_state.hyster_window - 0.01),
+                        current_state.voltage - current_state.voltage*(current_state.hyster_window + 0.01)};
+
+  for (int i = 0; i < 4; i++)
+  {
+    Serial.println("========================");
+
+
+    Gener.Change_Hyst(TestIn[i]);
+    Serial.print("Hyst test");
+    Serial.println(i);
+    if (TestIn[i] - current_state.voltage - current_state.voltage*current_state.hyster_window < 0)
+    {
+      Serial.println("Count result: HIGH");
+    }else if(TestIn[i] - current_state.voltage - current_state.voltage*current_state.hyster_window > 0)
+    {
+      Serial.println("Count result: LOW");
+    };
+    Serial.print("Gener.Duty: ");
+    Serial.println(Gener.Duty);
+
+
+    //Serial.println("========================");
+    delay(10);
+  };
+};
+
 
 void SomeControlTest()
 {
@@ -318,6 +357,7 @@ void setup() {
   start(current_state);
   //TestPWM();
   //TetsPFM();
+  //TestHist();
   
   //delay(10);
 
