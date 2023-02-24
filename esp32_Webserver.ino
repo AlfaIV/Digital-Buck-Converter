@@ -176,8 +176,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.4f7e66cb469a02a2db7e.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.4f7e66cb469a02a2db7e.js", "text/javascript");
+  server.on("/main.6c82492fdfaf24fcb0fa.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.6c82492fdfaf24fcb0fa.js", "text/javascript");
   });
 
   //PWM
@@ -207,6 +207,7 @@ void setup() {
         сама функция void setMode(string mode) {...}
         */
         current_state.mode = (const char *)jsonDocument["mode"];
+        delay(1);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -225,6 +226,7 @@ void setup() {
         Запускает стабилизатор с теми параметрами что в current_state
         */
       current_state.is_work = true;
+      delay(1);
       start(current_state);
       request->send(200, "text/plain", "");
 
@@ -261,6 +263,7 @@ void setup() {
         сама функция void setOutVoltage(string voltage) {...}
         */
         current_state.voltage = std::stod((const char *)jsonDocument["voltage"]);
+        delay(1);
         //не надо его включать start(current_state);
         request->send(200, "text/plain", "");
       } else {
@@ -280,6 +283,7 @@ void setup() {
         может принять pwm_freq даже если сейчас не PWM мод
         */
         current_state.pwm_freq = std::stod((const char *)jsonDocument["pwm_freq"]);
+        delay(1);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -299,6 +303,7 @@ void setup() {
         */
         //просто переписываем данные в структуре, регулятор в потоке сам подхватит измения
         current_state.law_reg = (const char *)jsonDocument["law_reg"];
+        delay(1);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -317,6 +322,7 @@ void setup() {
         может принять pulse_duration даже если сейчас не PFM мод
         */
         current_state.pulse_duration = std::stod((const char *)jsonDocument["pulse_duration"]);
+        delay(1);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -335,6 +341,7 @@ void setup() {
         может принять hyster_window даже если сейчас не hysteresis мод
         */
         current_state.hyster_window = std::stod((const char *)jsonDocument["hyster_window"]);
+        delay(1);
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -345,12 +352,12 @@ void setup() {
 }
 
 int countNoyify = 0;
-int countNoyifyMax = 100000;
+int countNoyifyMax = 20000;
 void loop() {
   if (current_state.is_work) {
-    countNoyifyMax = 10000;
+    countNoyifyMax = 1000;
   } else {
-    countNoyifyMax = 100000;
+    countNoyifyMax = 20000;
   }
   /*TODO updateState(current_state)
     сама функция void updateState(StabilizerState& state) {...}
@@ -360,10 +367,9 @@ void loop() {
   countNoyify++;
   if (countNoyify > countNoyifyMax) {
     notifyClients(current_state);
+    ws.cleanupClients();
     countNoyify = 0;
   }
 
   StabilizerTread(current_state);
-
-  // ws.cleanupClients();
 }
