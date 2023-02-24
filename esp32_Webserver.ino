@@ -245,7 +245,7 @@ void setup() {
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
       current_state.is_work = false;
-
+      delay(1);
       stop(current_state);
       request->send(200, "text/plain", "");
 
