@@ -21,7 +21,7 @@ class Control_Func_API
       //double current_value_flt = 0;
       
       //параметры регуляторов
-      double K_p = 1.5;
+      double K_p = 1;
       double K_i = 0.1;
       double K_d = 0.01;
       double dt = 0.5;

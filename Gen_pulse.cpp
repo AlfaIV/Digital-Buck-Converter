@@ -190,20 +190,18 @@ void COT_hyst(double window)
 
 void Gen_pulse::Set_Hyst(double up_window, double down_window, double _ref_out)
 {
-  //up_window down_window - в процентах от 0 до 1 от номинального выходного напряжения;
-  //переводим в вольты, в реальные границы по напряжению
- 
 
-  double _up_window = up_window*_ref_out;
+
+  double _up_window = up_window;
   this->up_window = _up_window;
 
-  double _down_window = down_window*_ref_out;
+  double _down_window = down_window*(-1);
   this->down_window = _down_window;
 
   double _deviation = deviation;
 
 
-  this->freq = 8e6;
+  this->freq = 100e3;
   this->resolution = floor(log2(80e6/this->freq));
   this->ref_out = _ref_out;
 
@@ -217,12 +215,15 @@ void Gen_pulse::Set_Hyst(double up_window, double down_window, double _ref_out)
 
 void Gen_pulse::Change_Hyst(double discrepancy)
 {
-  if (discrepancy >=  this->up_window)
+  //up_window down_window - в процентах от 0 до 1 от номинального выходного напряжения;
+  //переводим в вольты, в реальные границы по напряжению
+  if (discrepancy >  this->up_window)
   {
-    this->Duty= pow(2,this->resolution);
+    //this->Duty= pow(2,this->resolution)*0.1;
+    this->Duty = 256;
     //Serial.print("Change_Hyst:");
     //Serial.println("HIGH");
-  }else if(discrepancy <=  this->down_window)
+  }else if(discrepancy <  this->down_window)
   {
     this->Duty = 0;
     //Serial.print("Change_Hyst:");

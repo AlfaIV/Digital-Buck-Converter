@@ -8,8 +8,8 @@
 double Control_Func_API::P_regulation(Control_data* Current_control_data)
 {
   double err = Current_control_data->reference_value - Current_control_data->current_value;
-  Serial.print("Current_control_data->K_d*err: ");
-  Serial.println(Current_control_data->K_p*err);
+  //Serial.print("Current_control_data->K_d*err: ");
+  //Serial.println(Current_control_data->K_p*err);
   
   return constrain(Current_control_data->K_p*err,
   Current_control_data->min_output,

@@ -27,12 +27,13 @@ typedef struct StabilizerState {
   double pfm_freq = 0;
   double pulse_duration = 8e-6;
   //params for mode = "hysteresis"
-  double hyster_window = 0.1;
+  double hyster_window = 1.5;
   //
   bool is_work = true;
 } StabilizerState;
 
 StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
+//100кГц; 20% - 4.07В - гистерезис -0.01 - окно
 
 //-------------------------------------------------------------------
 void start(StabilizerState& state) {
@@ -60,12 +61,15 @@ void stop(StabilizerState& state) {
 //крутиться в лупе, иначе стабилизатор не будет работать
 void StabilizerTread(StabilizerState& state) {
   if (state.is_work) {
-    double out_volt = ADC.Volt_on_Devider();
-    Serial.print("Volt_on_Devider: ");
-    Serial.println(out_volt);
+    //double out_volt = ADC.Volt_on_Devider();
+
+
+    //Serial.print("Volt_on_Devider: ");
+    //Serial.println(out_volt);
     double discrepancy;
     if (state.mode == "PWM")
     {
+      double out_volt = ADC.Volt_on_Devider();
       Serial.println("PWM");
       if (state.law_reg == "П")
       {
@@ -93,6 +97,7 @@ void StabilizerTread(StabilizerState& state) {
       //Serial.println(state.duty);
     }else if (state.mode == "PFM")
     {
+      double out_volt = ADC.Volt_on_Devider();
       Serial.println("PFM");
       Serial.println("P reg");
       discrepancy = CtrlFunc.P_regulation(out_volt);
@@ -108,12 +113,13 @@ void StabilizerTread(StabilizerState& state) {
       Serial.println(state.pfm_freq);
     }else if (state.mode == "hysteresis")
     {
-      Serial.println("hysteresis");
-      Serial.println("P reg");
+      double out_volt = ADC.Volt_on_Devider(ADC.Get_real_volt(ADC.Read_data()));
+      //Serial.println("hysteresis");
+      //Serial.println("P reg");
 
       discrepancy = CtrlFunc.P_regulation(out_volt);
-      Serial.print("discrepancy: ");
-      Serial.println(discrepancy);
+      //Serial.print("discrepancy: ");
+      //Serial.println(discrepancy);
 
       Gener.Change_Hyst(discrepancy);
     };
@@ -346,14 +352,6 @@ void SomeControlTest()
 
 void setup() {
   Serial.begin(9600);
-  //Gener.Set_PWM(out_stb,out_max);
-  //TestPWM();
-  //Gener.Set_Hyst(0.05, -0.05);
-  /*
-    randomSeed(analogRead(35));
-    float window = 0.1;
-    Gener.Set_Hyst(window,window);
-  */
   start(current_state);
   //TestPWM();
   //TetsPFM();
@@ -367,73 +365,12 @@ void loop() {
 
   StabilizerTread(current_state);
   //TestAnalogRead();
-
+  //Gener.Change_PWM(0,256);
+  
   //TestAnalogRead();
   //TestControlFunc();
   //SomeControlTest();
 
-  /*
-    //Проверка ЧИМ управления
-    delay(100);
-
-    Serial.print("ADC_read_data:");
-    Serial.print(ADC.Read_data());
-    Serial.print(",");
-
-    Serial.print("ADC_data_in_V:");
-    Serial.print(ADC.Get_real_volt());
-    Serial.print(",");
-
-    Serial.print("ADC_filtered_data:");
-    double Input_Data = ADC.expRunningAverage();
-    Serial.print(Input_Data);
-    Serial.print(",");
-
-    Serial.print("Discrepancy:");
-    double discrepancy = CtrlFunc.P_regulation(Input_Data);
-    double ref_val = CtrlFunc.PreDefined_control_data.reference_value;
-    Serial.println(discrepancy);
-    Gener.Change_PFM(discrepancy);
-  */
-
-  /*
-    //Проверка гистерезисного управления
-    //генерация рандомных входных данных проводилась для проверки скорости
-    Serial.print("ADC_filtered_data:");
-    double Input_Data = random(50,250)/1e2;
-    Serial.print(Input_Data);
-    Serial.print(",");
-
-    Serial.print("Discrepancy:");
-    double discrepancy = CtrlFunc.P_regulation(Input_Data);
-    double ref_val = CtrlFunc.PreDefined_control_data.reference_value;
-    Serial.println(discrepancy);
-    //Gener.Change_PWM(discrepancy);
-    Gener.Change_Hyst(discrepancy);
-  */
-
-  //Проверка гистерезиса управления
-  /*delay(100);
-
-    Serial.print("ADC_read_data:");
-    Serial.print(ADC.Read_data());
-    Serial.print(",");
-
-    Serial.print("ADC_data_in_V:");
-    Serial.print(ADC.Get_real_volt());
-    Serial.print(",");
-
-    Serial.print("ADC_filtered_data:");
-    double Input_Data = ADC.expRunningAverage();
-    Serial.print(Input_Data);
-    Serial.print(",");
-
-    Serial.print("Discrepancy:");
-    double discrepancy = CtrlFunc.P_regulation(Input_Data);
-    double ref_val = CtrlFunc.PreDefined_control_data.reference_value;
-    Serial.println(discrepancy);
-    Gener.Change_Hyst(discrepancy);
-    //delay(100);
-  */
+ 
 }
 
