@@ -207,7 +207,7 @@ void setup() {
         сама функция void setMode(string mode) {...}
         */
         current_state.mode = (const char *)jsonDocument["mode"];
-        delay(1);
+
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -226,7 +226,7 @@ void setup() {
         Запускает стабилизатор с теми параметрами что в current_state
         */
       current_state.is_work = true;
-      delay(1);
+
       start(current_state);
       request->send(200, "text/plain", "");
 
@@ -245,7 +245,7 @@ void setup() {
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
       current_state.is_work = false;
-      delay(1);
+
       stop(current_state);
       request->send(200, "text/plain", "");
 
@@ -263,7 +263,7 @@ void setup() {
         сама функция void setOutVoltage(string voltage) {...}
         */
         current_state.voltage = std::stod((const char *)jsonDocument["voltage"]);
-        delay(1);
+
         //не надо его включать start(current_state);
         request->send(200, "text/plain", "");
       } else {
@@ -283,7 +283,7 @@ void setup() {
         может принять pwm_freq даже если сейчас не PWM мод
         */
         current_state.pwm_freq = std::stod((const char *)jsonDocument["pwm_freq"]);
-        delay(1);
+
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -303,7 +303,7 @@ void setup() {
         */
         //просто переписываем данные в структуре, регулятор в потоке сам подхватит измения
         current_state.law_reg = (const char *)jsonDocument["law_reg"];
-        delay(1);
+
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -322,7 +322,7 @@ void setup() {
         может принять pulse_duration даже если сейчас не PFM мод
         */
         current_state.pulse_duration = std::stod((const char *)jsonDocument["pulse_duration"]);
-        delay(1);
+
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
@@ -341,7 +341,7 @@ void setup() {
         может принять hyster_window даже если сейчас не hysteresis мод
         */
         current_state.hyster_window = std::stod((const char *)jsonDocument["hyster_window"]);
-        delay(1);
+
         request->send(200, "text/plain", "");
       } else {
         request->send(404, "text/plain", "Invalid input value");
