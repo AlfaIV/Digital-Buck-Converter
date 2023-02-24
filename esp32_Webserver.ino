@@ -355,9 +355,9 @@ int countNoyify = 0;
 int countNoyifyMax = 20000;
 void loop() {
   if (current_state.is_work) {
-    countNoyifyMax = 1000;
+    countNoyifyMax = 5000;
   } else {
-    countNoyifyMax = 20000;
+    countNoyifyMax = 50000;
   }
   /*TODO updateState(current_state)
     сама функция void updateState(StabilizerState& state) {...}
