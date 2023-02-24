@@ -359,11 +359,6 @@ void loop() {
   } else {
     countNoyifyMax = 100000;
   }
-  /*TODO updateState(current_state)
-    сама функция void updateState(StabilizerState& state) {...}
-    смотрит на текущий mode в current_state, и в зависимости от него обновляет нужные поля
-    !!!!!!!!напряжение voltage не реальное, а то что мы сами задаём!!!!!!!!!!!!!!
-  */
   countNoyify++;
   if (countNoyify > countNoyifyMax) {
     notifyClients(current_state);
@@ -371,5 +366,10 @@ void loop() {
     countNoyify = 0;
   }
 
+  /*TODO StabilizerTread(current_state)
+    сама функция void updateState(StabilizerState& state) {...}
+    смотрит на текущий mode в current_state, и в зависимости от него обновляет нужные поля
+    !!!!!!!!напряжение voltage не реальное, а то что мы сами задаём!!!!!!!!!!!!!!
+  */
   StabilizerTread(current_state);
 }
