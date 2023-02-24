@@ -16,8 +16,8 @@ Gen_pulse Gener;
 
 using std::string;
 
-const char *ssid = "RedmI";
-const char *password = "00123987";
+const char *ssid = "ZyXEL NBG-418N v2";
+const char *password = "TEKKP46444";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/api/websocket");
@@ -44,32 +44,35 @@ StabilizerState current_state;  //!!!!!!объект состояния отсы
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
 
-size_t create_json_pwm_state(double voltage, double duty, double pwm_freq, string law_reg) {
+size_t create_json_pwm_state(double voltage, double duty, double pwm_freq, string law_reg, bool is_work) {
   jsonDocument.clear();
   jsonDocument["mode"] = "PWM";
   jsonDocument["duty"] = duty;
   jsonDocument["pwm_freq"] = pwm_freq;
   jsonDocument["law_reg"] = law_reg;
   jsonDocument["voltage"] = voltage;
+  jsonDocument["is_work"] = is_work;
   size_t len = serializeJson(jsonDocument, buffer);
   return len;
 }
 
-size_t create_json_pfm_state(double voltage, double pfm_freq, double pulse_duration) {
+size_t create_json_pfm_state(double voltage, double pfm_freq, double pulse_duration, bool is_work) {
   jsonDocument.clear();
   jsonDocument["mode"] = "PFM";
   jsonDocument["pfm_freq"] = pfm_freq;
   jsonDocument["pulse_duration"] = pulse_duration;
   jsonDocument["voltage"] = voltage;
+  jsonDocument["is_work"] = is_work;
   size_t len = serializeJson(jsonDocument, buffer);
   return len;
 }
 
-size_t create_json_hyster_state(double voltage, double hyster_window) {
+size_t create_json_hyster_state(double voltage, double hyster_window, bool is_work) {
   jsonDocument.clear();
   jsonDocument["mode"] = "hysteresis";
   jsonDocument["hyster_window"] = hyster_window;
   jsonDocument["voltage"] = voltage;
+  jsonDocument["is_work"] = is_work;
   size_t len = serializeJson(jsonDocument, buffer);
   return len;
 }
@@ -77,15 +80,15 @@ size_t create_json_hyster_state(double voltage, double hyster_window) {
 //websocket--------------------------------------------------------------------
 void notifyClients(StabilizerState &state) {
   if (state.mode == "PWM") {
-    size_t len = create_json_pwm_state(state.voltage, state.duty, state.pwm_freq, state.law_reg);
+    size_t len = create_json_pwm_state(state.voltage, state.duty, state.pwm_freq, state.law_reg, state.is_work);
     ws.textAll(buffer, len);
   }
   if (state.mode == "PFM") {
-    size_t len = create_json_pfm_state(state.voltage, state.pfm_freq, state.pulse_duration);
+    size_t len = create_json_pfm_state(state.voltage, state.pfm_freq, state.pulse_duration, state.is_work);
     ws.textAll(buffer, len);
   }
   if (state.mode == "hysteresis") {
-    size_t len = create_json_hyster_state(state.voltage, state.hyster_window);
+    size_t len = create_json_hyster_state(state.voltage, state.hyster_window, state.is_work);
     ws.textAll(buffer, len);
   }
 }
@@ -113,38 +116,32 @@ void initWebSocket() {
   server.addHandler(&ws);
 }
 //-------------------------------------------------------------------
-void start(StabilizerState& state){
+void start(StabilizerState &state) {
   if (state.is_work) {
     if (state.mode == "PWM") {
-      double ref_in = 15;//volt
-      Gener.Set_PWM(state.voltage,ref_in);
+      double ref_in = 15;  //volt
+      Gener.Set_PWM(state.voltage, ref_in);
     };
   };
 }
-void stop(StabilizerState& state){
-  if (state.is_work == false) {
+void stop(StabilizerState &state) {
+  if (!state.is_work) {
     int _channel = 0;
     ledcWrite(_channel, 0);
   };
 }
 
 //крутиться в лупе, иначе стабилизатор не будет работать
-void StabilizerTread(StabilizerState& state){
+void StabilizerTread(StabilizerState &state) {
   if (state.is_work) {
     double out_volt = ADC.Volt_on_Devider();
-    if (state.mode == "PWM")
-    {
-      if (state.law_reg == "П")
-      {
+    if (state.mode == "PWM") {
+      if (state.law_reg == "П") {
         Gener.Change_PWM(CtrlFunc.P_regulation(out_volt));
-      }else if (state.law_reg == "ПД")
-      {
+      } else if (state.law_reg == "ПД") {
         Gener.Change_PWM(CtrlFunc.PD_regulation(out_volt));
-        delay(10);
-      }else if (state.law_reg == "ПИД")
-      {
+      } else if (state.law_reg == "ПИД") {
         Gener.Change_PWM(CtrlFunc.PID_regulation(out_volt));
-        delay(10);
       };
       //обнавляем Duty
       state.duty = Gener.Duty;
@@ -246,6 +243,7 @@ void setup() {
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
       current_state.is_work = false;
+      delay(1);
       stop(current_state);
       request->send(200, "text/plain", "");
 
@@ -346,13 +344,26 @@ void setup() {
   server.begin();
 }
 
+int countNoyify = 0;
+int countNoyifyMax = 100000;
 void loop() {
+  if (current_state.is_work) {
+    countNoyifyMax = 10000;
+  } else {
+    countNoyifyMax = 100000;
+  }
   /*TODO updateState(current_state)
     сама функция void updateState(StabilizerState& state) {...}
     смотрит на текущий mode в current_state, и в зависимости от него обновляет нужные поля
     !!!!!!!!напряжение voltage не реальное, а то что мы сами задаём!!!!!!!!!!!!!!
   */
+  countNoyify++;
+  if (countNoyify > countNoyifyMax) {
+    notifyClients(current_state);
+    countNoyify = 0;
+  }
+
   StabilizerTread(current_state);
-  notifyClients(current_state);
+
   // ws.cleanupClients();
 }
