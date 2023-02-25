@@ -4,15 +4,16 @@
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 #include <string>
+#include "Arduino.h"
 
 #include "Control_Func_API.h"
 #include "InputVoltageRead.h"
 #include "Gen_pulse.h"
 
+
 InputVoltageRead ADC;
 Control_Func_API CtrlFunc;
 Gen_pulse Gener;
-
 
 using std::string;
 
@@ -119,13 +120,18 @@ void initWebSocket() {
 void start(StabilizerState &state) {
   if (state.is_work) {
     if (state.mode == "PWM") {
-      double ref_in = 15;  //volt
-      Gener.Set_PWM(state.voltage, ref_in);
+      Gener.Set_PWM(state.voltage, state.pwm_freq);
+    } else if (state.mode == "PFM") {
+      Gener.Set_PFM(state.pulse_duration, state.voltage);
+    } else if (state.mode == "hysteresis") {
+      Gener.Set_Hyst(state.hyster_window, -state.hyster_window, state.voltage);
     };
+    CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
+    //иначе функции П ПИ и ПИД не будут работать
   };
 }
 void stop(StabilizerState &state) {
-  if (!state.is_work) {
+  if (state.is_work == false) {
     int _channel = 0;
     ledcWrite(_channel, 0);
   };
@@ -134,17 +140,37 @@ void stop(StabilizerState &state) {
 //крутиться в лупе, иначе стабилизатор не будет работать
 void StabilizerTread(StabilizerState &state) {
   if (state.is_work) {
-    double out_volt = ADC.Volt_on_Devider();
+    double discrepancy;
+    CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
+
     if (state.mode == "PWM") {
+      double out_volt = ADC.Volt_on_Devider();
       if (state.law_reg == "П") {
-        Gener.Change_PWM(CtrlFunc.P_regulation(out_volt));
-      } else if (state.law_reg == "ПД") {
-        Gener.Change_PWM(CtrlFunc.PD_regulation(out_volt));
+        discrepancy = CtrlFunc.P_regulation(out_volt);
+      } else if (state.law_reg == "ПИ") {
+        discrepancy = CtrlFunc.PI_regulation(out_volt);
       } else if (state.law_reg == "ПИД") {
-        Gener.Change_PWM(CtrlFunc.PID_regulation(out_volt));
+        discrepancy = CtrlFunc.PID_regulation(out_volt);
       };
+
+      Gener.Change_PWM(discrepancy);
       //обнавляем Duty
-      state.duty = Gener.Duty;
+      state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
+    } else if (state.mode == "PFM") {
+      double out_volt = ADC.Volt_on_Devider();
+
+      discrepancy = CtrlFunc.P_regulation(out_volt);
+      Gener.Change_PFM(discrepancy);
+
+      //обнавляем Duty и Freq
+      state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
+      state.pfm_freq = Gener.freq;
+    } else if (state.mode == "hysteresis") {
+      double out_volt = ADC.Volt_on_Devider(ADC.Get_real_volt(ADC.Read_data()));
+
+      discrepancy = CtrlFunc.P_regulation(out_volt);
+
+      Gener.Change_Hyst(discrepancy);
     };
   };
 }
@@ -176,8 +202,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.6c82492fdfaf24fcb0fa.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.6c82492fdfaf24fcb0fa.js", "text/javascript");
+  server.on("/main.18ce8bff41a16c1f0d1d.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.18ce8bff41a16c1f0d1d.js", "text/javascript");
   });
 
   //PWM
@@ -207,6 +233,7 @@ void setup() {
         сама функция void setMode(string mode) {...}
         */
         current_state.mode = (const char *)jsonDocument["mode"];
+        start(current_state);
 
         request->send(200, "text/plain", "");
       } else {
@@ -245,7 +272,8 @@ void setup() {
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
       current_state.is_work = false;
-      delay(1);
+      stop(current_state);
+      delay(10);
       stop(current_state);
       request->send(200, "text/plain", "");
 
@@ -263,6 +291,7 @@ void setup() {
         сама функция void setOutVoltage(string voltage) {...}
         */
         current_state.voltage = std::stod((const char *)jsonDocument["voltage"]);
+        start(current_state);
 
         //не надо его включать start(current_state);
         request->send(200, "text/plain", "");
@@ -283,6 +312,7 @@ void setup() {
         может принять pwm_freq даже если сейчас не PWM мод
         */
         current_state.pwm_freq = std::stod((const char *)jsonDocument["pwm_freq"]);
+        start(current_state);
 
         request->send(200, "text/plain", "");
       } else {
@@ -303,6 +333,7 @@ void setup() {
         */
         //просто переписываем данные в структуре, регулятор в потоке сам подхватит измения
         current_state.law_reg = (const char *)jsonDocument["law_reg"];
+        start(current_state);
 
         request->send(200, "text/plain", "");
       } else {
@@ -322,6 +353,7 @@ void setup() {
         может принять pulse_duration даже если сейчас не PFM мод
         */
         current_state.pulse_duration = std::stod((const char *)jsonDocument["pulse_duration"]);
+        start(current_state);
 
         request->send(200, "text/plain", "");
       } else {
@@ -341,6 +373,7 @@ void setup() {
         может принять hyster_window даже если сейчас не hysteresis мод
         */
         current_state.hyster_window = std::stod((const char *)jsonDocument["hyster_window"]);
+        start(current_state);
 
         request->send(200, "text/plain", "");
       } else {
@@ -351,19 +384,25 @@ void setup() {
   server.begin();
 }
 
-int countNoyify = 0;
-int countNoyifyMax = 100000;
+// int countNoyify = 0;
+// int countNoyifyMax = 100000;
+unsigned long prev_time = 0;
 void loop() {
-  if (current_state.is_work) {
-    countNoyifyMax = 5000;
-  } else {
-    countNoyifyMax = 100000;
-  }
-  countNoyify++;
-  if (countNoyify > countNoyifyMax) {
+  // if (current_state.is_work) {
+  //   countNoyifyMax = 5000;
+  // } else {
+  //   countNoyifyMax = 100000;
+  // }
+  // countNoyify++;
+  // if (countNoyify > countNoyifyMax) {
+  //   notifyClients(current_state);
+  //   ws.cleanupClients();
+  //   countNoyify = 0;
+  // }
+  if (millis() - prev_time > 600) {
     notifyClients(current_state);
     ws.cleanupClients();
-    countNoyify = 0;
+    prev_time = millis();
   }
 
   /*TODO StabilizerTread(current_state)
