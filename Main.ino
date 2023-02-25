@@ -17,15 +17,15 @@ Gen_pulse Gener;
 using std::string;
 
 typedef struct StabilizerState {
-  string mode = "hysteresis";  //default "none"
-  double voltage = 5;
+  string mode = "PFM";  //default "none"
+  double voltage = 7;
   //params for mode = "PWM"
   double duty = 0;
   double pwm_freq = 100e3;
-  string law_reg = "П";
+  string law_reg = "ПИД";
   //params for mode = "PFM"
   double pfm_freq = 0;
-  double pulse_duration = 8e-6;
+  double pulse_duration = 3e-6;
   //params for mode = "hysteresis"
   double hyster_window = 1.5;
   //
@@ -49,6 +49,8 @@ void start(StabilizerState& state) {
       Serial.println("hysteresis");
       Gener.Set_Hyst(state.hyster_window, -state.hyster_window, state.voltage);
     };
+    CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
+    //иначе функции П ПИ и ПИД не будут работать
   };
 }
 void stop(StabilizerState& state) {
@@ -67,61 +69,98 @@ void StabilizerTread(StabilizerState& state) {
     //Serial.print("Volt_on_Devider: ");
     //Serial.println(out_volt);
     double discrepancy;
+    CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
+
     if (state.mode == "PWM")
     {
       double out_volt = ADC.Volt_on_Devider();
-      Serial.println("PWM");
+      Serial.print("PWM:");
       if (state.law_reg == "П")
       {
-        Serial.println("P reg");
+        Serial.print("P reg");
+        Serial.print(",");
         discrepancy = CtrlFunc.P_regulation(out_volt);
       } else if (state.law_reg == "ПИ")
       {
-        Serial.println("PI reg");
-        Serial.print("Integral: ");
-        Serial.println(CtrlFunc.PreDefined_control_data.integral);
+        Serial.print("PI reg");
+        Serial.print(",");
+        Serial.print("Integral:");
+        Serial.print(CtrlFunc.PreDefined_control_data.integral);
+        Serial.print(",");
         discrepancy = CtrlFunc.PI_regulation(out_volt);
-        delay(10);
+        //delay(10);
       } else if (state.law_reg == "ПИД")
       {
-        Serial.println("PID reg");
+        Serial.print("PID reg");
+        Serial.print(",");
+        Serial.print("Integral:");
+        Serial.print(CtrlFunc.PreDefined_control_data.integral);
+        Serial.print(",");
         discrepancy = CtrlFunc.PID_regulation(out_volt);
-        delay(10);
+        //delay(10);
       };
-      Serial.print("discrepancy: ");
-      Serial.println(discrepancy);
+      
       Gener.Change_PWM(discrepancy);
       //обнавляем Duty
-      state.duty = Gener.Duty;
-      //Serial.print("Duty: ");
-      //Serial.println(state.duty);
+      state.duty = ((Gener.Duty)/pow(2,Gener.resolution))*100;
+
+      Serial.print("Volt_in_OUT:");
+      Serial.print(out_volt);
+      Serial.print(",");
+      Serial.print("discrepancy:");
+      Serial.print(discrepancy);
+      Serial.print(",");
+      Serial.print("Duty:");
+      Serial.println(state.duty);
+
     }else if (state.mode == "PFM")
     {
       double out_volt = ADC.Volt_on_Devider();
-      Serial.println("PFM");
-      Serial.println("P reg");
+
       discrepancy = CtrlFunc.P_regulation(out_volt);
       Gener.Change_PFM(discrepancy);
-      Serial.print("discrepancy: ");
-      Serial.println(discrepancy);
+
+
+
       //обнавляем Duty и Freq
-      state.duty = Gener.Duty;
+      state.duty = ((Gener.Duty)/pow(2,Gener.resolution))*100;
       state.pfm_freq = Gener.freq;
-      Serial.print("Duty: ");
-      Serial.println(state.duty);
-      Serial.print("Freq: ");
+      
+       /*
+      Serial.print("PFM:");
+      Serial.print("P reg");
+      Serial.print(",");
+      Serial.print("out_volt:");
+      Serial.print(out_volt);
+      Serial.print(",");
+      Serial.print("discrepancy:");
+      Serial.print(discrepancy);
+      Serial.print(",");
+      Serial.print("Duty:");
+      Serial.print(state.duty);
+      Serial.print(",");
+     */
+      Serial.print("Freq:");
       Serial.println(state.pfm_freq);
+      
+
     }else if (state.mode == "hysteresis")
     {
       double out_volt = ADC.Volt_on_Devider(ADC.Get_real_volt(ADC.Read_data()));
-      //Serial.println("hysteresis");
-      //Serial.println("P reg");
 
       discrepancy = CtrlFunc.P_regulation(out_volt);
-      //Serial.print("discrepancy: ");
-      //Serial.println(discrepancy);
 
       Gener.Change_Hyst(discrepancy);
+
+      Serial.print("hysteresis:");
+      Serial.print("P reg");
+      Serial.print(",");
+      Serial.print("discrepancy: ");
+      Serial.print(discrepancy);
+      Serial.print(",");
+      Serial.print("Duty:");
+      Serial.println(Gener.Duty);
+      
     };
   };
 }

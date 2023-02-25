@@ -24,7 +24,11 @@ class Control_Func_API
       double K_p = 1;
       double K_i = 0.1;
       double K_d = 0.01;
+
       double dt = 0.5;
+      //long для расчета dt
+      unsigned long previous_time = 0;
+
       //!! ---- нужно калибровать
 
       //?? how take this value
