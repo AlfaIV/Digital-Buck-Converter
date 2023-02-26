@@ -32,7 +32,7 @@ typedef struct StabilizerState {
   string law_reg = "П";
   //params for mode = "PFM"
   double pfm_freq = 0;
-  double pulse_duration = 2;
+  double pulse_duration = 1e-6;
   //params for mode = "hysteresis"
   double hyster_window = 0.1;
   //
@@ -202,8 +202,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.6dad9f954f9158131a0e.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.6dad9f954f9158131a0e.js", "text/javascript");
+  server.on("/main.8cedde4900729b4985a2.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.8cedde4900729b4985a2.js", "text/javascript");
   });
 
   //PWM
