@@ -204,8 +204,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.ef4cd2f3735f0d60243b.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.ef4cd2f3735f0d60243b.js", "text/javascript");
+  server.on("/main.e0b2e141cbcdf730345a.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.e0b2e141cbcdf730345a.js", "text/javascript");
   });
 
   //PWM
