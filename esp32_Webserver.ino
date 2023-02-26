@@ -134,6 +134,8 @@ void stop(StabilizerState &state) {
   if (state.is_work == false) {
     int _channel = 0;
     ledcWrite(_channel, 0);
+    current_state.duty = 0;
+    current_state.pfm_freq = 0;
   };
 }
 
@@ -202,8 +204,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.8cedde4900729b4985a2.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.8cedde4900729b4985a2.js", "text/javascript");
+  server.on("/main.ef4cd2f3735f0d60243b.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.ef4cd2f3735f0d60243b.js", "text/javascript");
   });
 
   //PWM
