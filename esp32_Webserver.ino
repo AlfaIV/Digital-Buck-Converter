@@ -1,5 +1,6 @@
 #include "WiFi.h"
 #include "ESPAsyncWebSrv.h"
+#include <ESPmDNS.h>
 #include "SPIFFS.h"
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
@@ -176,7 +177,7 @@ void StabilizerTread(StabilizerState &state) {
     };
   };
 }
-//--------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------
 
 void setup() {
   Serial.begin(115200);
@@ -193,6 +194,11 @@ void setup() {
   }
 
   Serial.println(WiFi.localIP());
+
+  if (!MDNS.begin("stabilazer")) {
+    Serial.println("Error starting mDNS");
+    return;
+  }
 
   initWebSocket();
 
