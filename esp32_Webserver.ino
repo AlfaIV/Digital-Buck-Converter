@@ -18,8 +18,8 @@ Gen_pulse Gener;
 
 using std::string;
 
-const char *ssid = "ZyXEL NBG-418N v2";
-const char *password = "TEKKP46444";
+const char *ssid = "RedmI";
+const char *password = "00123987";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/api/websocket");
@@ -29,7 +29,7 @@ typedef struct StabilizerState {
   double voltage = 0;
   //params for mode = "PWM"
   double duty = 0;
-  double pwm_freq = 0;
+  double pwm_freq = 100000;
   string law_reg = "П";
   //params for mode = "PFM"
   double pfm_freq = 0;
@@ -210,8 +210,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.e0b2e141cbcdf730345a.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.e0b2e141cbcdf730345a.js", "text/javascript");
+  server.on("/main.730885030ad70131ba42.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.730885030ad70131ba42.js", "text/javascript");
   });
 
   //PWM
