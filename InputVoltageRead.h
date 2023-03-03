@@ -7,7 +7,7 @@
 #include "math.h"
 
 //ADC parametrs
-#define ADC_pin 13//CHANGE
+#define ADC_pin 39//CHANGE
 #define ADC_bit_with 12
 #define ADC_in_MAX 3.3//??
 

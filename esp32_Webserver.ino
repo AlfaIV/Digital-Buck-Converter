@@ -25,8 +25,8 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/api/websocket");
 
 typedef struct StabilizerState {
-  string mode = "none";  //default "none"
-  double voltage = 0;
+  string mode = "PWM";  //default "none"
+  double voltage = 5;
   //params for mode = "PWM"
   double duty = 0;
   double pwm_freq = 100000;
@@ -37,7 +37,7 @@ typedef struct StabilizerState {
   //params for mode = "hysteresis"
   double hyster_window = 0.1;
   //
-  bool is_work = false;
+  bool is_work = true;
 } StabilizerState;
 
 StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
@@ -187,6 +187,7 @@ void setup() {
     return;
   }
 
+   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -390,7 +391,43 @@ void setup() {
     });
 
   server.begin();
+  start(current_state);
 }
+
+
+void TestAnalogRead()
+{
+  //dont foget add to setup
+  //Gener.Set_PWM();
+  //заглушка для поддержания ШИМа на выходе
+
+
+  Serial.print("ADC_read_data:");
+  Serial.print(ADC.Read_data());
+  Serial.print(",");
+
+  Serial.print("ADC_filtered_data:");
+  Serial.print(ADC.expRunningAverage());
+  Serial.print(",");
+
+  Serial.print("ADC_data_in_V:");
+  Serial.print(ADC.Get_real_volt());
+  Serial.print(",");
+
+  Serial.print("ADC_filtered_data_Mediana:");
+  Serial.print(ADC.findMedianN_optim());
+  Serial.print(",");
+
+
+  Serial.print("Volt_on_Devider:");
+  Serial.print(ADC.Volt_on_Devider());
+  //Serial.print(",");
+
+
+
+  Serial.println();
+
+};
 
 // int countNoyify = 0;
 // int countNoyifyMax = 100000;
@@ -413,10 +450,12 @@ void loop() {
     prev_time = millis();
   }
 
+  TestAnalogRead();
+
   /*TODO StabilizerTread(current_state)
     сама функция void updateState(StabilizerState& state) {...}
     смотрит на текущий mode в current_state, и в зависимости от него обновляет нужные поля
     !!!!!!!!напряжение voltage не реальное, а то что мы сами задаём!!!!!!!!!!!!!!
   */
-  StabilizerTread(current_state);
+  //StabilizerTread(current_state);
 }
