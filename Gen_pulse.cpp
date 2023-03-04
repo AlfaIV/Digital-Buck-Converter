@@ -1,3 +1,4 @@
+#include "HardwareSerial.h"
 #include "Arduino.h"
 #include "Gen_pulse.h"
 
@@ -35,16 +36,28 @@ void Gen_pulse::Set_PWM(double _ref_out, int _freq)
   this->resolution = floor(log2(80e6/_freq));
   this->ref_out = _ref_out;
 
+  // Serial.print("this->freq: ");
+  // Serial.println(this->freq);
+  // Serial.print("this->ref_out: ");
+  // Serial.println(this->ref_out);
+
+
   ledcAttachPin(this->pin, this->channel);
-  ledcSetup(this->channel, _freq, this->resolution);
+  //ledcSetup(this->channel, _freq, this->resolution);
+  ledcChangeFrequency(this->channel, _freq, this->resolution);
 
   //this->ref_Duty = floor((_ref_out/ADC_in_MAX) * pow(2, this->resolution));//fix it
   //this->Duty = this->ref_Duty;
-  this->ref_Duty = floor((_ref_out/ADC_in_MAX) * pow(2, this->resolution));//fix it
+  int _Duty = floor((_ref_out/ADC_in_MAX) * pow(2, this->resolution));//fix it
+  //Serial.print("_Duty: ");
+  //Serial.println(_Duty);
+  _Duty = constrain(_Duty, 0, pow(2, this->resolution));//defend
+  this->ref_Duty = _Duty;
   //this->Duty = this->ref_Duty;
-
-
-  ledcWrite(this->channel, this->Duty);
+  //Serial.print("this->ref_Duty: ");
+  //Serial.println(this->ref_Duty);
+  //delay(10);
+  ledcWrite(this->channel, this->ref_Duty);
 
 };
 
@@ -55,16 +68,17 @@ void Gen_pulse::Change_PWM(double discrepancy, int _Duty)
   double _deviation = deviation;
   
   //D = (Uout + dU) /Uin = Uout/Uin + dU/Uin = refD + D'
-  if (_Duty == NULL)
+  if (_Duty == NULL && (discrepancy > _deviation || discrepancy < -_deviation))
   {
     //int _discrepancy = floor(discrepancy/out_MAX * pow(2, this->resolution)); //fix it convert from [-Uout,+Uout] to [0,2**resolution]
     //double _discrepancy = ((discrepancy)/out_MAX * pow(2, this->resolution));
     //_Duty = this->ref_Duty + _discrepancy;
     _Duty = floor((discrepancy + this->ref_out)/ADC_in_MAX * pow(2, this->resolution));
+    _Duty = constrain(_Duty, 0, pow(2, this->resolution));//defend
+    this->Duty = _Duty;
   };
   //Serial.println(_Duty);
-  _Duty = constrain(_Duty, 0, pow(2, this->resolution));//defend
-  this->Duty = _Duty;
+
 
   ledcWrite(this->channel, this->Duty);
   //Serial.print(this->Duty);
@@ -151,18 +165,12 @@ void Gen_pulse::Set_Hyst(double up_window, double down_window, double _ref_out)
   //up_window down_window - в процентах от 0 до 1 от номинального выходного напряжения;
   //переводим в вольты, в реальные границы по напряжению
  
-
   double _up_window = up_window*_ref_out;
   this->up_window = _up_window;
-
   double _down_window = down_window*_ref_out;
   this->down_window = _down_window;
-
   pinMode(this->pin, OUTPUT);
-
 };
-
-
 void Gen_pulse::Change_Hyst(double discrepancy)
 {
   if (discrepancy >=  this->up_window)
@@ -177,8 +185,6 @@ void Gen_pulse::Change_Hyst(double discrepancy)
     Serial.println("LOW");
   };
 };
-
-
 void COT_hyst(double window)
 {
   //D = Uin/Uout = tp*f

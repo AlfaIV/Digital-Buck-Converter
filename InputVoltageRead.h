@@ -7,14 +7,15 @@
 #include "math.h"
 
 //ADC parametrs
-#define ADC_pin 13//CHANGE
+#define ADC_pin 36//CHANGE
+//39
 #define ADC_bit_with 12
 #define ADC_in_MAX 3.3//??
 
 
 //change!!!!!
 //devider paremetrs
-#define R_adc 96.0
+#define R_adc 100.0
 #define R 455.0
 //!! ---- нужно калибровать
 
@@ -44,11 +45,11 @@ class InputVoltageRead{
     double Get_real_volt();
     //получаем данные в вольтах на ADC
     
-    double expRunningAverage(double newVal, double k = K_filter);
-    double expRunningAverage();
+    int expRunningAverage(double newVal, double k = K_filter);
+    int expRunningAverage();
     //прогоняем данные через фильтр Бегущее среднее
-    float findMedianN_optim(float newVal);
-    float findMedianN_optim();
+    int findMedianN_optim(float newVal);
+    int findMedianN_optim();
     //прогоняем данные через медианный фильтр
 
     double Volt_on_Devider(double Data);
