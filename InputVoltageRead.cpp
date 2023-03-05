@@ -1,3 +1,4 @@
+#include "HardwareSerial.h"
 #include "InputVoltageRead.h"
 
 //InputVoltageRead.cpp
@@ -14,13 +15,13 @@ InputVoltageRead::InputVoltageRead(){
 
 int InputVoltageRead::Read_data(){
   ReadData = analogRead(ADC_pin);
-  //Serial.print("analogRead:");
-  //Serial.print(ReadData);
-  //Serial.print(";");
-  //Serial.print("analogReadMilliVolts:");
-  //int ReadData_2 = analogReadMilliVolts(ADC_pin);
-  //Serial.print(";");
-  //Serial.println();
+  // Serial.print("analogRead:");
+  // Serial.print(ReadData);
+  // Serial.print(";");
+  // Serial.print("analogReadMilliVolts:");
+  // int ReadData_2 = analogReadMilliVolts(ADC_pin);
+  // Serial.print(";");
+  // Serial.println();
   return ReadData;
 };
 
@@ -28,7 +29,11 @@ int InputVoltageRead::Read_data(){
 
 double InputVoltageRead::Get_real_volt(int Data){
   double K = ADC_in_MAX/pow(2,ADC_bit_with);
-  //коэффициент переводит из принятых данных в вольты на ADC
+  // Serial.print("Data: ");
+  // Serial.println(Data);
+  // Serial.print("K: ");
+  // Serial.println(K);
+  // //коэффициент переводит из принятых данных в вольты на ADC
   return K*(Data);
 }; 
 
@@ -41,7 +46,7 @@ double InputVoltageRead::Get_real_volt(){
 
 //------------------------------------
 // бегущее среднее
-double InputVoltageRead::expRunningAverage(double newVal, double k) {
+int InputVoltageRead::expRunningAverage(double newVal, double k) {
   //double k = 0.1;  
   // коэффициент фильтрации, 0.0-1.0
   //???double systematic_error = 0.05;
@@ -51,7 +56,7 @@ double InputVoltageRead::expRunningAverage(double newVal, double k) {
   //return 0;
 };
 
-double InputVoltageRead::expRunningAverage() {
+int InputVoltageRead::expRunningAverage() {
   /*
   double k = 0.1;  
   // коэффициент фильтрации, 0.0-1.0
@@ -70,7 +75,7 @@ double InputVoltageRead::expRunningAverage() {
 // возвращает медиану по последним NUM_READ вызовам
 // НАВЕРНОЕ ЛУЧШИЙ ВАРИАНТ!
 // медиана на N значений со своим буфером, ускоренный вариант
-float InputVoltageRead::findMedianN_optim(float newVal)
+int InputVoltageRead::findMedianN_optim(float newVal)
 {
   static float buffer[NUM_READ];  // статический буфер
   static byte count = 0;
@@ -98,23 +103,14 @@ float InputVoltageRead::findMedianN_optim(float newVal)
   return buffer[(int)NUM_READ / 2];
 }
 
-float InputVoltageRead::findMedianN_optim()
+int InputVoltageRead::findMedianN_optim()
 {
   //data = this->Read_data();
   return this->findMedianN_optim(this->Read_data());
-  //return 0;
-}
+};
 
-//------------------------------------
-double InputVoltageRead::Volt_on_Devider(double Data)
-{
-  //int _R_adc = R_adc;
-  //int _R = R;
-  
-  double K = R_adc/(R_adc + R);
-  //Serial.print(K);
-  //Serial.print(Data);
-  return Data/K;
+double InputVoltageRead::Volt_on_Devider(double Data){
+  return Data*K_devider;
 };
 
 double InputVoltageRead::Volt_on_Devider()

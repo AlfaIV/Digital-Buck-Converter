@@ -6,41 +6,23 @@
 #include <ArduinoJson.h>
 #include <string>
 #include "Arduino.h"
-
-#include "Control_Func_API.h"
-#include "InputVoltageRead.h"
-#include "Gen_pulse.h"
-
-
-InputVoltageRead ADC;
-Control_Func_API CtrlFunc;
-Gen_pulse Gener;
+#include "Stabilazer.h"
 
 using std::string;
 
-const char *ssid = "RedmI";
-const char *password = "00123987";
+StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
+
+const char *ssid = "GalaxyS21";
+const char *password = "bhar3375";
+
+// const char *ssid = "RedmI";
+// const char *password = "00123987";
+
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/api/websocket");
 
-typedef struct StabilizerState {
-  string mode = "PWM";  //default "none"
-  double voltage = 5;
-  //params for mode = "PWM"
-  double duty = 0;
-  double pwm_freq = 100000;
-  string law_reg = "П";
-  //params for mode = "PFM"
-  double pfm_freq = 0;
-  double pulse_duration = 1e-6;
-  //params for mode = "hysteresis"
-  double hyster_window = 0.1;
-  //
-  bool is_work = true;
-} StabilizerState;
-
-StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
+///----------------------------------------------------------------------
 //json--------------------------------------------------------------------
 
 StaticJsonDocument<250> jsonDocument;
@@ -117,70 +99,15 @@ void initWebSocket() {
   ws.onEvent(onEvent);
   server.addHandler(&ws);
 }
-//-------------------------------------------------------------------
-void start(StabilizerState &state) {
-  if (state.is_work) {
-    if (state.mode == "PWM") {
-      Gener.Set_PWM(state.voltage, state.pwm_freq);
-    } else if (state.mode == "PFM") {
-      Gener.Set_PFM(state.pulse_duration, state.voltage);
-    } else if (state.mode == "hysteresis") {
-      Gener.Set_Hyst(state.hyster_window, -state.hyster_window, state.voltage);
-    };
-    CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
-    //иначе функции П ПИ и ПИД не будут работать
-  };
-}
-void stop(StabilizerState &state) {
-  if (state.is_work == false) {
-    int _channel = 0;
-    ledcWrite(_channel, 0);
-    current_state.duty = 0;
-    current_state.pfm_freq = 0;
-  };
-}
 
-//крутиться в лупе, иначе стабилизатор не будет работать
-void StabilizerTread(StabilizerState &state) {
-  if (state.is_work) {
-    double discrepancy;
-    CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
 
-    if (state.mode == "PWM") {
-      double out_volt = ADC.Volt_on_Devider();
-      if (state.law_reg == "П") {
-        discrepancy = CtrlFunc.P_regulation(out_volt);
-      } else if (state.law_reg == "ПИ") {
-        discrepancy = CtrlFunc.PI_regulation(out_volt);
-      } else if (state.law_reg == "ПИД") {
-        discrepancy = CtrlFunc.PID_regulation(out_volt);
-      };
 
-      Gener.Change_PWM(discrepancy);
-      //обнавляем Duty
-      state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
-    } else if (state.mode == "PFM") {
-      double out_volt = ADC.Volt_on_Devider();
 
-      discrepancy = CtrlFunc.P_regulation(out_volt);
-      Gener.Change_PFM(discrepancy);
 
-      //обнавляем Duty и Freq
-      state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
-      state.pfm_freq = Gener.freq;
-    } else if (state.mode == "hysteresis") {
-      double out_volt = ADC.Volt_on_Devider(ADC.Get_real_volt(ADC.Read_data()));
 
-      discrepancy = CtrlFunc.P_regulation(out_volt);
-
-      Gener.Change_Hyst(discrepancy);
-    };
-  };
-}
-//--------------------------------------------------------------------------------------------------------
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   if (!SPIFFS.begin(true)) {
     Serial.println("An Error has occurred while mounting SPIFFS");
@@ -395,67 +322,17 @@ void setup() {
 }
 
 
-void TestAnalogRead()
-{
-  //dont foget add to setup
-  //Gener.Set_PWM();
-  //заглушка для поддержания ШИМа на выходе
 
-
-  Serial.print("ADC_read_data:");
-  Serial.print(ADC.Read_data());
-  Serial.print(",");
-
-  Serial.print("ADC_filtered_data:");
-  Serial.print(ADC.expRunningAverage());
-  Serial.print(",");
-
-  Serial.print("ADC_data_in_V:");
-  Serial.print(ADC.Get_real_volt());
-  Serial.print(",");
-
-  Serial.print("ADC_filtered_data_Mediana:");
-  Serial.print(ADC.findMedianN_optim());
-  Serial.print(",");
-
-
-  Serial.print("Volt_on_Devider:");
-  Serial.print(ADC.Volt_on_Devider());
-  //Serial.print(",");
-
-
-
-  Serial.println();
-
-};
-
-// int countNoyify = 0;
-// int countNoyifyMax = 100000;
 unsigned long prev_time = 0;
 void loop() {
-  // if (current_state.is_work) {
-  //   countNoyifyMax = 5000;
-  // } else {
-  //   countNoyifyMax = 100000;
-  // }
-  // countNoyify++;
-  // if (countNoyify > countNoyifyMax) {
-  //   notifyClients(current_state);
-  //   ws.cleanupClients();
-  //   countNoyify = 0;
-  // }
+
   if (millis() - prev_time > 600) {
     notifyClients(current_state);
     ws.cleanupClients();
     prev_time = millis();
   }
 
-  TestAnalogRead();
+  //TestAnalogRead();
 
-  /*TODO StabilizerTread(current_state)
-    сама функция void updateState(StabilizerState& state) {...}
-    смотрит на текущий mode в current_state, и в зависимости от него обновляет нужные поля
-    !!!!!!!!напряжение voltage не реальное, а то что мы сами задаём!!!!!!!!!!!!!!
-  */
-  //StabilizerTread(current_state);
+  StabilizerTread(current_state);
 }
