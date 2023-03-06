@@ -14,7 +14,7 @@ InputVoltageRead::InputVoltageRead(){
 //------------------------------------
 
 int InputVoltageRead::Read_data(){
-  ReadData = analogRead(ADC_pin);
+  ReadData = ADC_LUT[analogRead(ADC_pin)];
   // Serial.print("analogRead:");
   // Serial.print(ReadData);
   // Serial.print(";");
