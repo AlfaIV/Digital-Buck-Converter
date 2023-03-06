@@ -49,6 +49,8 @@ void stop(StabilizerState& state) {
   if (state.is_work == false) {
     int _channel = 0;
     ledcWrite(_channel, 0);
+    state.duty = 0;
+    state.pfm_freq = 0;
   };
 }
 
@@ -94,7 +96,7 @@ void StabilizerTread(StabilizerState& state) {
       
       Gener.Change_PWM(discrepancy);
       //обнавляем Duty
-      state.duty = ((Gener.Duty)/pow(2,Gener.resolution))*100;
+      state.duty = ceil(((Gener.Duty)/pow(2,Gener.resolution))*100);
 
       Serial.print("Volt_in_OUT:");
       Serial.print(out_volt);
