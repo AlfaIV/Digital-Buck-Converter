@@ -5,7 +5,25 @@
 
 #include "Arduino.h"
 #include "math.h"
-#include "Constants.h"
+
+//ADC parametrs
+#define ADC_pin 39//CHANGE
+//39
+#define ADC_bit_with 12
+#define ADC_in_MAX 3.15//??
+
+
+//change!!!!!
+//devider paremetrs
+//#define R_adc 1
+#define K_devider 5.7
+//#define R 455.0
+//!! ---- нужно калибровать
+
+//filters parametrs
+#define K_filter 0.1
+#define NUM_READ 30 // порядок медианы
+//!! ---- нужно калибровать
 
 class InputVoltageRead{
   //данный класс инициализирует пины ЦАПа,
@@ -38,4 +56,5 @@ class InputVoltageRead{
     double Volt_on_Devider(double Data);
     double Volt_on_Devider();
 };
+
 #endif
