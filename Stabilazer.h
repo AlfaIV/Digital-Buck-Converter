@@ -22,7 +22,7 @@ typedef struct StabilizerState {
   double pfm_freq = 0;
   double pulse_duration = 1e-6;
   //params for mode = "hysteresis"
-  double hyster_window = 0.1;
+  double hyster_window = 0.2;
   //
   bool is_work = false;
 } StabilizerState;
