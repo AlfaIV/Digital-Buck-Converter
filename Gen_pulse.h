@@ -9,10 +9,11 @@
 #define def_resolution 9 //bit
 
 #define Initial_Freq 100e3
-#define ADC_in_MAX 17.955//это нужно менять, калибровочное значение
+#define ADC_in_MAX 15//входное напряжение
 //не на ADC а на делителе
 #define refer_out 5//везде и так передаем
-#define deviation 0.05//можно поменять, точность
+#define deviation 0.011//можно поменять, точность
+#define deviationPFM 0.03//можно поменять, точность
 //#define ref_Duty 5/15
 
 #define Initial_t_p 8e-6 //8 us
@@ -32,6 +33,8 @@ class Gen_pulse
 
     double up_window;
     double down_window;
+
+    unsigned long prev_time_pwm = 0;
 
     int channel = def_channel;
     int pin = def_pin;

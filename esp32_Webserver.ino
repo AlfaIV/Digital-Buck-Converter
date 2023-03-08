@@ -12,8 +12,8 @@ using std::string;
 
 StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
 
-const char *ssid = "RedmI";
-const char *password = "00123987";
+const char *ssid = "ZyXEL NBG-418N v2";
+const char *password = "TEKKP46444";
 
 // const char *ssid = "RedmI";
 // const char *password = "00123987";
@@ -100,21 +100,15 @@ void initWebSocket() {
   server.addHandler(&ws);
 }
 
-
-
-
-
-
-
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   if (!SPIFFS.begin(true)) {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
 
-   WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -138,8 +132,8 @@ void setup() {
     request->send(SPIFFS, "/main.4c1393cbee59ec7826dd.css", "text/css");
   });
 
-  server.on("/main.774f06fd9be9568159b6.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/main.774f06fd9be9568159b6.js", "text/javascript");
+  server.on("/main.ba63dd55afbdadaa8113.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/main.ba63dd55afbdadaa8113.js", "text/javascript");
   });
 
   //PWM
@@ -169,6 +163,7 @@ void setup() {
         сама функция void setMode(string mode) {...}
         */
         current_state.mode = (const char *)jsonDocument["mode"];
+        notifyClients(current_state);
         start(current_state);
 
         request->send(200, "text/plain", "");
@@ -189,7 +184,7 @@ void setup() {
         Запускает стабилизатор с теми параметрами что в current_state
         */
       current_state.is_work = true;
-
+      notifyClients(current_state);
       start(current_state);
       request->send(200, "text/plain", "");
 
@@ -208,11 +203,11 @@ void setup() {
         собственно останавливает, при этом параметры в current_state можно принимать(не лочь!)
         */
       current_state.is_work = false;
+      notifyClients(current_state);
       stop(current_state);
-      delay(10);
       stop(current_state);
       request->send(200, "text/plain", "");
-
+      notifyClients(current_state);
       //request->send(404, "text/plain", "");
     });
 
@@ -227,6 +222,7 @@ void setup() {
         сама функция void setOutVoltage(string voltage) {...}
         */
         current_state.voltage = std::stod((const char *)jsonDocument["voltage"]);
+        notifyClients(current_state);
         start(current_state);
 
         //не надо его включать start(current_state);
@@ -248,9 +244,11 @@ void setup() {
         может принять pwm_freq даже если сейчас не PWM мод
         */
         current_state.pwm_freq = std::stod((const char *)jsonDocument["pwm_freq"]);
+        notifyClients(current_state);
         start(current_state);
 
         request->send(200, "text/plain", "");
+        notifyClients(current_state);
       } else {
         request->send(404, "text/plain", "Invalid input value");
       }
@@ -269,9 +267,11 @@ void setup() {
         */
         //просто переписываем данные в структуре, регулятор в потоке сам подхватит измения
         current_state.law_reg = (const char *)jsonDocument["law_reg"];
+        notifyClients(current_state);
         start(current_state);
 
         request->send(200, "text/plain", "");
+        notifyClients(current_state);
       } else {
         request->send(404, "text/plain", "Invalid input value");
       }
@@ -289,9 +289,11 @@ void setup() {
         может принять pulse_duration даже если сейчас не PFM мод
         */
         current_state.pulse_duration = std::stod((const char *)jsonDocument["pulse_duration"]);
+        notifyClients(current_state);
         start(current_state);
 
         request->send(200, "text/plain", "");
+        notifyClients(current_state);
       } else {
         request->send(404, "text/plain", "Invalid input value");
       }
@@ -309,15 +311,18 @@ void setup() {
         может принять hyster_window даже если сейчас не hysteresis мод
         */
         current_state.hyster_window = std::stod((const char *)jsonDocument["hyster_window"]);
+        notifyClients(current_state);
         start(current_state);
 
         request->send(200, "text/plain", "");
+        notifyClients(current_state);
       } else {
         request->send(404, "text/plain", "Invalid input value");
       }
     });
 
   server.begin();
+  ADC.setup_adc();
   start(current_state);
 }
 
@@ -328,7 +333,7 @@ void loop() {
 
   if (millis() - prev_time > 600) {
     notifyClients(current_state);
-    ws.cleanupClients();
+    // ws.cleanupClients();
     prev_time = millis();
   }
 

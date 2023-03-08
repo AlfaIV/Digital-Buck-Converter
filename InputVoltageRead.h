@@ -5,56 +5,40 @@
 
 #include "Arduino.h"
 #include "math.h"
+#include <esp_adc_cal.h>
 
 //ADC parametrs
-#define ADC_pin 39//CHANGE
-//39
-#define ADC_bit_with 12
-#define ADC_in_MAX 3.15//??
+#define ADC_pin 39  //CHANGE
 
+// Command to see the REF_VOLTAGE: espefuse.py --port /dev/ttyUSB0 adc_info
+// or dc2_vref_to_gpio(25)
+#define REF_VOLTAGE 1135
 
-//change!!!!!
-//devider paremetrs
-//#define R_adc 1
-#define K_devider 5.7
-//#define R 455.0
+#define K_devider 0.0057  //учитываем / на 1000
 //!! ---- нужно калибровать
 
 //filters parametrs
 #define K_filter 0.1
-#define NUM_READ 30 // порядок медианы
+#define NUM_READ 8 // порядок медианы
 //!! ---- нужно калибровать
 
-class InputVoltageRead{
+class InputVoltageRead {
   //данный класс инициализирует пины ЦАПа,
   //затем считывает с него значения, эти значения фильтруем
   //затем переводит в вольты на ацп и на делителе
-   public:
-    int ReadData = 0;
-    double ReadDataInVolt = 0;
-    
-    //double RealVoltageOnADC;
-    double filVal = 0;
+public:
+  //double RealVoltageOnADC;
+  int filVal = 0;
+  int readValue = 0;
+  double returnValue = 0;
 
-    InputVoltageRead();
-    //конструктор, где настраиваем пины
-    
-    int Read_data();
-    //считываем данные с пина
-    
-    double Get_real_volt(int Data);
-    double Get_real_volt();
-    //получаем данные в вольтах на ADC
-    
-    int expRunningAverage(double newVal, double k = K_filter);
-    int expRunningAverage();
-    //прогоняем данные через фильтр Бегущее среднее
-    int findMedianN_optim(float newVal);
-    int findMedianN_optim();
-    //прогоняем данные через медианный фильтр
+  void setup_adc();
 
-    double Volt_on_Devider(double Data);
-    double Volt_on_Devider();
+  int findMedianN_optim(int newVal);
+
+  int expRunningAverage(int newVal, double k = K_filter);
+
+  double Volt_on_Devider(bool isPid = false);
 };
 
 #endif

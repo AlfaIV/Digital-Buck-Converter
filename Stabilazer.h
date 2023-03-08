@@ -33,7 +33,7 @@ void start(StabilizerState& state) {
     if (state.mode == "PWM") {
       Serial.println("PWM");
       //double ref_in = 17;//volt
-      Gener.Set_PWM(state.voltage, state.pwm_freq );
+      Gener.Set_PWM(state.voltage, state.pwm_freq);
     } else if (state.mode == "PFM") {
       Serial.println("PFM");
       Gener.Set_PFM(state.pulse_duration, state.voltage);
@@ -49,9 +49,12 @@ void stop(StabilizerState& state) {
   if (state.is_work == false) {
     int _channel = 0;
     ledcWrite(_channel, 0);
+    state.duty = 0;
+    state.pfm_freq = 0;
   };
 }
 
+double out_volt;
 //крутиться в лупе, иначе стабилизатор не будет работать
 void StabilizerTread(StabilizerState& state) {
   if (state.is_work) {
@@ -63,51 +66,48 @@ void StabilizerTread(StabilizerState& state) {
     double discrepancy;
     CtrlFunc.PreDefined_control_data.reference_value = state.voltage;
 
-    if (state.mode == "PWM")
-    {
-      double out_volt = ADC.Volt_on_Devider();
-      Serial.print("PWM:");
-      if (state.law_reg == "П")
-      {
-        Serial.print("P reg");
-        Serial.print(",");
+    if (state.mode == "PWM") {
+      // Serial.print("PWM:");
+      if (state.law_reg == "П") {
+        // Serial.print("P reg");
+        // Serial.print(",");
+        out_volt = ADC.Volt_on_Devider();
         discrepancy = CtrlFunc.P_regulation(out_volt);
-      } else if (state.law_reg == "ПИ")
-      {
-        Serial.print("PI reg");
-        Serial.print(",");
-        Serial.print("Integral:");
-        Serial.print(CtrlFunc.PreDefined_control_data.integral);
-        Serial.print(",");
+      } else if (state.law_reg == "ПИ") {
+        // Serial.print("PI reg");
+        // Serial.print(",");
+        // Serial.print("Integral:");
+        // Serial.print(CtrlFunc.PreDefined_control_data.integral);
+        // Serial.print(",");
+        out_volt = ADC.Volt_on_Devider();
         discrepancy = CtrlFunc.PI_regulation(out_volt);
         //delay(10);
-      } else if (state.law_reg == "ПИД")
-      {
-        Serial.print("PID reg");
-        Serial.print(",");
-        Serial.print("Integral:");
-        Serial.print(CtrlFunc.PreDefined_control_data.integral);
-        Serial.print(",");
+      } else if (state.law_reg == "ПИД") {
+        // Serial.print("PID reg");
+        // Serial.print(",");
+        // Serial.print("Integral:");
+        // Serial.print(CtrlFunc.PreDefined_control_data.integral);
+        // Serial.print(",");
+        out_volt = ADC.Volt_on_Devider(true);
         discrepancy = CtrlFunc.PID_regulation(out_volt);
         //delay(10);
       };
-      
+
       Gener.Change_PWM(discrepancy);
       //обнавляем Duty
-      state.duty = ((Gener.Duty)/pow(2,Gener.resolution))*100;
+      state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
 
-      Serial.print("Volt_in_OUT:");
-      Serial.print(out_volt);
-      Serial.print(",");
-      Serial.print("discrepancy:");
-      Serial.print(discrepancy);
-      Serial.print(",");
-      Serial.print("Duty:");
-      Serial.println(state.duty);
+      // Serial.print("Volt_in_OUT:");
+      // Serial.print(out_volt);
+      // Serial.print(",");
+      // Serial.print("discrepancy:");
+      // Serial.print(discrepancy);
+      // Serial.print(",");
+      // Serial.print("Duty:");
+      // Serial.println(state.duty);
 
-    }else if (state.mode == "PFM")
-    {
-      double out_volt = ADC.Volt_on_Devider();
+    } else if (state.mode == "PFM") {
+      out_volt = ADC.Volt_on_Devider(true);
 
       discrepancy = CtrlFunc.P_regulation(out_volt);
       Gener.Change_PFM(discrepancy);
@@ -115,32 +115,31 @@ void StabilizerTread(StabilizerState& state) {
 
 
       //обнавляем Duty и Freq
-      state.duty = ((Gener.Duty)/pow(2,Gener.resolution))*100;
+      state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
       state.pfm_freq = Gener.freq;
-      
-       
-      Serial.print("PFM:");
-      Serial.print("P reg");
-      Serial.print(",");
-      Serial.print("out_volt:");
-      Serial.print(out_volt);
-      Serial.print(",");
-      Serial.print("discrepancy:");
-      Serial.print(discrepancy);
-      Serial.print(",");
-      Serial.print("Duty:");
-      Serial.print(state.duty);
-      Serial.print(",");
-     
-      Serial.print("Freq:");
-      Serial.println(state.pfm_freq);
-      
 
-    }else if (state.mode == "hysteresis")
-    {
-      double out_volt = ADC.Volt_on_Devider(ADC.Get_real_volt(ADC.Read_data()));
 
-      discrepancy = CtrlFunc.P_regulation(out_volt);
+      // Serial.print("PFM:");
+      // Serial.print("P reg");
+      // Serial.print(",");
+      // Serial.print("out_volt:");
+      // Serial.print(out_volt);
+      // Serial.print(",");
+      // Serial.print("discrepancy:");
+      // Serial.print(discrepancy);
+      // Serial.print(",");
+      // Serial.print("Duty:");
+      // Serial.print(state.duty);
+      // Serial.print(",");
+
+      // Serial.print("Freq:");
+      // Serial.println(state.pfm_freq);
+
+
+    } else if (state.mode == "hysteresis") {
+      out_volt = ADC.Volt_on_Devider();
+
+      discrepancy = CtrlFunc.P_regulation_hyst(out_volt);
 
       Gener.Change_Hyst(discrepancy);
 
@@ -152,46 +151,16 @@ void StabilizerTread(StabilizerState& state) {
       // Serial.print(",");
       // Serial.print("Duty:");
       // Serial.println(Gener.Duty);
-      
     };
   };
 }
 //--------------------------------------------------------------------
 
-void TestAnalogRead()
-{
-  //dont foget add to setup
-  //Gener.Set_PWM();
-  //заглушка для поддержания ШИМа на выходе
-  //Gener.Change_PWM(0.01,150);
-  //delay(50);
+void TestAnalogRead(){
+  // Serial.print("Volt_on_Devider:");
+  // Serial.print(ADC.Volt_on_Devider());
 
-
-  Serial.print("ADC_read_data:");
-  Serial.print(ADC.Read_data());
-  Serial.print(",");
-
-  Serial.print("ADC_filtered_data:");
-  Serial.print(ADC.expRunningAverage());
-  Serial.print(",");
-
-  Serial.print("ADC_data_in_V:");
-  Serial.print(ADC.Get_real_volt());
-  Serial.print(",");
-
-  Serial.print("ADC_filtered_data_Mediana:");
-  Serial.print(ADC.findMedianN_optim());
-  Serial.print(",");
-
-
-  Serial.print("Volt_on_Devider:");
-  Serial.print(ADC.Volt_on_Devider());
-  //Serial.print(",");
-
-
-
-  Serial.println();
-
+  // Serial.println();
 };
 
 // void TestControlFunc()
@@ -278,15 +247,15 @@ void TestAnalogRead()
 //   //D = Uin/Uout = tp*f
 //   //f = Uin/(Uout + tp)
 
-  
+
 //   auto CountFreq = [&current_state](double discrepancy)->int
-//   { 
+//   {
 //     int freq = ((current_state.voltage + discrepancy)/(ADC_in_MAX*current_state.pulse_duration));
 //     return (freq/1e3)*1e3;
 //   };
 
 //   auto CountDuty = [&current_state](int freq)->int
-//   { 
+//   {
 //     return freq*current_state.pulse_duration;
 //   };
 
@@ -318,7 +287,7 @@ void TestAnalogRead()
 //     //Serial.println("========================");
 //     delay(10);
 //   };
-  
+
 //   //CountFreq(0);
 
 //   return 1;
