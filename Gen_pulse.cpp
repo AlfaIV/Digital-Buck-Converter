@@ -223,7 +223,7 @@ void Gen_pulse::Change_Hyst(double discrepancy) {
     this->Duty = 208;
     // Serial.print("Change_Hyst:");
     // Serial.println("HIGH");
-    digitalWrite(this->pin, HIGH);
+    //digitalWrite(this->pin, HIGH);
   } else if (discrepancy < this->down_window) {
     this->Duty = 0;
     // Serial.print("Change_Hyst:");
