@@ -58,7 +58,7 @@ void Gen_pulse::Set_PWM(double _ref_out, int _freq) {
 };
 
 void Gen_pulse::Change_PWM(double discrepancy) {
-  // if (micros() - prev_time_pwm > 500) {
+  if (micros() - prev_time_pwm > 500) {
   // int _channel = def_channel;
   double _deviation = deviation;
 
@@ -80,10 +80,11 @@ void Gen_pulse::Change_PWM(double discrepancy) {
     this->Duty += ceil(discrepancy / ADC_in_MAX * pow(2, this->resolution));
     this->Duty = constrain(this->Duty, 0, pow(2, this->resolution));
     ledcWrite(this->channel, this->Duty);
-    // prev_time_pwm = micros();
+    prev_time_pwm = micros();
   };
   // Serial.println(_Duty);
   // Serial.print(this->Duty);
+  }
 };
 
 //----------------------------------------------------
@@ -137,7 +138,7 @@ void Gen_pulse::Set_PFM(double _t_p, double _ref_out) {
 double cur_freq = 0;
 int cur_duty = 0;
 void Gen_pulse::Change_PFM(double discrepancy) {
-  if (micros() - prev_time_pwm > 200) {
+  if (micros() - prev_time_pwm > 500) {
     cur_duty = this->Duty;
     cur_freq = this->freq;
     // D = (Uout + dU) /Uin = Uout/Uin + dU/Uin = refD + D'
@@ -201,7 +202,7 @@ void Gen_pulse::Set_Hyst(double up_window, double down_window, double _ref_out) 
   this->up_window = _up_window;
 
   double _down_window = down_window;
-  this->down_window = _down_window;
+  this->down_window = -_down_window;
   this->freq = 100e3;
   this->resolution = floor(log2(80e6 / this->freq));
   this->ref_out = _ref_out;

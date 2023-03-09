@@ -73,6 +73,7 @@ void StabilizerTread(StabilizerState& state) {
         // Serial.print(",");
         out_volt = ADC.Volt_on_Devider();
         discrepancy = CtrlFunc.P_regulation(out_volt);
+        Gener.Change_PWM(discrepancy);
       } else if (state.law_reg == "ПИ") {
         // Serial.print("PI reg");
         // Serial.print(",");
@@ -81,6 +82,7 @@ void StabilizerTread(StabilizerState& state) {
         // Serial.print(",");
         out_volt = ADC.Volt_on_Devider();
         discrepancy = CtrlFunc.PI_regulation(out_volt);
+        Gener.Change_PWM(discrepancy);
         //delay(10);
       } else if (state.law_reg == "ПИД") {
         // Serial.print("PID reg");
@@ -90,10 +92,11 @@ void StabilizerTread(StabilizerState& state) {
         // Serial.print(",");
         out_volt = ADC.Volt_on_Devider(true);
         discrepancy = CtrlFunc.PID_regulation(out_volt);
+        Gener.Change_PWM(discrepancy);
         //delay(10);
       };
 
-      Gener.Change_PWM(discrepancy);
+
       //обнавляем Duty
       state.duty = ((Gener.Duty) / pow(2, Gener.resolution)) * 100;
 
@@ -137,7 +140,7 @@ void StabilizerTread(StabilizerState& state) {
 
 
     } else if (state.mode == "hysteresis") {
-      out_volt = ADC.Volt_on_Devider();
+      out_volt = ADC.Volt_on_Devider(true);
 
       discrepancy = CtrlFunc.P_regulation_hyst(out_volt);
 

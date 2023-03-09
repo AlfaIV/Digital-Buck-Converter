@@ -18,7 +18,7 @@
 //!! ---- нужно калибровать
 
 //filters parametrs
-#define K_filter 0.1
+#define K_filter 0.05
 #define NUM_READ 8 // порядок медианы
 //!! ---- нужно калибровать
 

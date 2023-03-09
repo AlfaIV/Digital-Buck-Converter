@@ -167,7 +167,7 @@ double Control_Func_API::PID_regulation(Control_data* Current_control_data)
   
   return constrain(Current_control_data->K_p*err + 
   10*Current_control_data->K_i*Current_control_data->integral + 
-  Current_control_data->K_d*differential,
+  0.1*Current_control_data->K_d*differential,
   Current_control_data->min_output,
   Current_control_data->max_output);
 }
