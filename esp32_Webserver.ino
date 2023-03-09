@@ -12,8 +12,8 @@ using std::string;
 
 StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
 
-const char *ssid = "ZyXEL NBG-418N v2";
-const char *password = "TEKKP46444";
+const char *ssid = "GalaxyS21";
+const char *password = "bhar3375";
 
 // const char *ssid = "RedmI";
 // const char *password = "00123987";
