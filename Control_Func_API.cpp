@@ -10,7 +10,7 @@ double Control_Func_API::P_regulation(Control_data* Current_control_data)
   double err = Current_control_data->reference_value - Current_control_data->current_value;
   //Serial.print("Current_control_data->K_d*err: ");
   //Serial.println(Current_control_data->K_p*err);
-  
+  delay(6);
   return constrain(Current_control_data->K_p*err,
   Current_control_data->min_output,
   Current_control_data->max_output);
@@ -113,7 +113,7 @@ double Control_Func_API::PI_regulation(Control_data* Current_control_data)
   //Current_control_data->previous_time = millis();
   Current_control_data->previous_time = micros();
   //сохраняем текущее время
-
+  delay(6);
   return constrain(Current_control_data->K_p*err + 10*Current_control_data->K_i*Current_control_data->integral,
   Current_control_data->min_output,
   Current_control_data->max_output);

@@ -71,7 +71,7 @@ void StabilizerTread(StabilizerState& state) {
       if (state.law_reg == "П") {
         // Serial.print("P reg");
         // Serial.print(",");
-        out_volt = ADC.Volt_on_Devider();
+        out_volt = ADC.Volt_on_Devider(true);
         discrepancy = CtrlFunc.P_regulation(out_volt);
         Gener.Change_PWM(discrepancy);
       } else if (state.law_reg == "ПИ") {
@@ -80,7 +80,7 @@ void StabilizerTread(StabilizerState& state) {
         // Serial.print("Integral:");
         // Serial.print(CtrlFunc.PreDefined_control_data.integral);
         // Serial.print(",");
-        out_volt = ADC.Volt_on_Devider();
+        out_volt = ADC.Volt_on_Devider(true);
         discrepancy = CtrlFunc.PI_regulation(out_volt);
         Gener.Change_PWM(discrepancy);
         //delay(10);
