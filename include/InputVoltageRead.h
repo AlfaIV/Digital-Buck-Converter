@@ -8,7 +8,7 @@
 #include <esp_adc_cal.h>
 
 //ADC parametrs
-#define ADC_pin 35  //CHANGE
+#define ADC_pin 39  //CHANGE
 
 // Command to see the REF_VOLTAGE: espefuse.py --port /dev/ttyUSB0 adc_info
 // or dc2_vref_to_gpio(25)
