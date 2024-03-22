@@ -12,8 +12,12 @@ using std::string;
 
 StabilizerState current_state;  //!!!!!!объект состояния отсылаемый каждый цикл на фронт
 
-const char *ssid = "GalaxyS21";
-const char *password = "bhar3375";
+// const char *ssid = "GalaxyS21";
+// const char *password = "bhar3375";
+
+const char *ssid = "SKB";
+const char *password = "k4L4!1Da";
+
 
 // const char *ssid = "RedmI";
 // const char *password = "00123987";
