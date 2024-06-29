@@ -7,6 +7,7 @@
 
 __Разработчики__
 
+* _lead_ - [Родин Михаил Валерьевич](https://www.mrodin.ru/)
 * _electronic_ - [Алексей]()
 * _frontend_ - [Михаил](https://github.com/mike5535)
 * _embded_ - [Иван](https://github.com/AlfaIV)
@@ -34,3 +35,4 @@ __Полезные ссылки__
 * [Прошивка программы](https://randomnerdtutorials.com/vs-code-platformio-ide-esp32-esp8266-arduino/)
 (_!! Не забываем нажимать boot на МК во время прошивки_)
 * [Прошивка web интерфейса](https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/)
+* [Электропитание? Это просто!](https://www.youtube.com/@electropitanie)
