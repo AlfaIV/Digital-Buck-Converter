@@ -30,7 +30,7 @@ __Инструкция__
 
 __Полезные ссылки__
 * [Репозиторий с web-интерфейсом](https://github.com/Mike5535/webinterface_stabilizer)
-* [Трассировка печатной платы]()
+* [Трассировка печатной платы](https://oshwlab.com/rodin/dps_v1-0)
 * [Прошивка программы](https://randomnerdtutorials.com/vs-code-platformio-ide-esp32-esp8266-arduino/)
 (_!! Не забываем нажимать boot на МК во время прошивки_)
 * [Прошивка web интерфейса](https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/)
